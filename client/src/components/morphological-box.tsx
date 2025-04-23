@@ -28,18 +28,25 @@ import {
   Plus, 
   RotateCcw, 
   GridIcon, 
-  Loader2 
+  Loader2,
+  Database, 
+  Sliders, 
+  BarChart
 } from "lucide-react";
 import AttributeTag from "./attribute-tag";
+import CombinationDialog from "./combination-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
-
 interface MorphologicalBoxProps {
   morphBoxId?: number;
   onSave: (content: any) => void;
 }
 
-type BoxParameter = Parameter & { attributes: Attribute[] };
+// Define the BoxParameter type inline
+type BoxParameter = Parameter & { 
+  attributes: Attribute[]; 
+  weight?: number; // Engineering importance weight (1-10)
+};
 
 export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBoxProps) {
   const { toast } = useToast();
@@ -248,6 +255,28 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
     
     setBoxParameters(newParameters);
   };
+  
+  const handleUpdateParameterWeight = (parameterId: number) => {
+    // Get current weight
+    const parameter = boxParameters.find(p => p.id === parameterId);
+    if (!parameter) return;
+    
+    const currentWeight = parameter.weight || 5;
+    // Cycle through weights: 5 -> 7 -> 10 -> 3 -> 5
+    const newWeight = currentWeight === 5 ? 7 : 
+                      currentWeight === 7 ? 10 : 
+                      currentWeight === 10 ? 3 : 5;
+    
+    // Update parameter weight
+    setBoxParameters(prev => prev.map(p => 
+      p.id === parameterId ? { ...p, weight: newWeight } : p
+    ));
+    
+    toast({
+      title: "Parameter importance updated",
+      description: `${parameter.name} importance set to ${newWeight}/10`,
+    });
+  };
 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset your morphological box? This will remove all parameters.")) {
@@ -292,7 +321,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
     
     // Generate sample combinations
     for (let i = 0; i < sampleSize; i++) {
-      const combination = {};
+      const combination: Record<string, string> = {};
       
       boxParameters.forEach(param => {
         if (param.attributes.length > 0) {
@@ -393,8 +422,16 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
                         <div className={`h-4 w-1 bg-${parameter.color}-500 rounded-full mr-3`}></div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <div className="text-sm font-medium text-gray-900">
-                              {parameter.name}
+                            <div className="flex items-center">
+                              <div className="text-sm font-medium text-gray-900 mr-2">
+                                {parameter.name}
+                              </div>
+                              <div 
+                                className="text-xs px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-700 font-medium"
+                                title="Engineering importance"
+                              >
+                                {parameter.weight || 5}/10
+                              </div>
                             </div>
                             <div className="hidden group-hover:flex space-x-1">
                               <Button
@@ -504,6 +541,13 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Combination Dialog */}
+      <CombinationDialog 
+        open={combinationsDialogOpen} 
+        onOpenChange={setCombinationsDialogOpen}
+        parameters={boxParameters}
+      />
     </div>
   );
 }

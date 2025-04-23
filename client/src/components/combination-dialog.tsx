@@ -14,7 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BoxParameter } from "@/types/parameter";
+import { Parameter, Attribute } from "@shared/schema";
+
+// Define BoxParameter type directly here
+type BoxParameter = Parameter & { attributes: Attribute[] };
 
 interface CombinationDialogProps {
   open: boolean;
@@ -211,7 +214,7 @@ export default function CombinationDialog({
                         {parameter.name}
                       </h4>
                       <div className="ml-2 space-y-1">
-                        {parameter.attributes.map(attribute => (
+                        {parameter.attributes.map((attribute: Attribute) => (
                           <div key={attribute.id} className="flex items-center">
                             <input
                               type="checkbox"
