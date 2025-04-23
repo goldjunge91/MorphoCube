@@ -8,7 +8,8 @@ import {
   Share2, 
   Users, 
   Settings, 
-  LogOut 
+  LogOut,
+  Loader2
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
