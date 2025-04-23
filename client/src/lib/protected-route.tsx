@@ -2,37 +2,44 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 
+interface ProtectedRouteProps {
+  path: string;
+  component: () => React.JSX.Element;
+  requireAdmin?: boolean;
+}
+
 export function ProtectedRoute({
   path,
   component: Component,
-}: {
-  path: string;
-  component: () => React.JSX.Element;
-}) {
+  requireAdmin = false,
+}: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
-  return (
-    <Route path={path}>
-      {(() => {
-        if (isLoading) {
-          return (
-            <div className="flex items-center justify-center min-h-screen">
-              <Loader2 className="h-8 w-8 animate-spin text-border" />
-            </div>
-          );
-        }
+  if (isLoading) {
+    return (
+      <Route path={path}>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-border" />
+        </div>
+      </Route>
+    );
+  }
 
-        if (!user) {
-          return <Redirect to="/auth" />;
-        }
+  if (!user) {
+    return (
+      <Route path={path}>
+        <Redirect to="/auth" />
+      </Route>
+    );
+  }
 
-        // For admin routes, check if user is admin
-        if (path.startsWith("/admin") && !user.isAdmin) {
-          return <Redirect to="/" />;
-        }
+  if (requireAdmin && !user.isAdmin) {
+    return (
+      <Route path={path}>
+        <Redirect to="/" />
+      </Route>
+    );
+  }
 
-        return <Component />;
-      })()}
-    </Route>
-  );
+  return <Route path={path} component={Component} />;
 }

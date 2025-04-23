@@ -1,65 +1,48 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { insertUserSchema } from "@shared/schema";
 import { Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-
-const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(1, "Please confirm your password"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
+
+const registerSchema = insertUserSchema.extend({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+  email: z.string().email("Please enter a valid email"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const [, setLocation] = useLocation();
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<string>("login");
   const { user, loginMutation, registerMutation } = useAuth();
 
   // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      setLocation("/");
-    }
-  }, [user, setLocation]);
+  if (user) {
+    navigate("/");
+    return null;
+  }
 
+  // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -68,6 +51,11 @@ export default function AuthPage() {
     },
   });
 
+  const onLoginSubmit = (data: LoginFormValues) => {
+    loginMutation.mutate(data);
+  };
+
+  // Register form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -75,38 +63,34 @@ export default function AuthPage() {
       email: "",
       password: "",
       confirmPassword: "",
+      isAdmin: false,
     },
   });
 
-  const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
-  };
-
   const onRegisterSubmit = (data: RegisterFormValues) => {
+    // Remove confirmPassword as it's not part of the API
     const { confirmPassword, ...registerData } = data;
     registerMutation.mutate(registerData);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        <div className="flex flex-col justify-center space-y-6">
-          <div className="space-y-2 text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Morphological Box Creator
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              Create, analyze, and share your morphological analyses with our powerful, 
-              intuitive drag-and-drop interface.
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Form Section */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold">Morphological Box Tool</h1>
+            <p className="text-muted-foreground mt-2">
+              Sign in to your account or create a new one
             </p>
           </div>
 
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <Card>
                 <CardHeader>
@@ -115,9 +99,9 @@ export default function AuthPage() {
                     Enter your credentials to access your account
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
+                    <CardContent className="space-y-4">
                       <FormField
                         control={loginForm.control}
                         name="username"
@@ -138,12 +122,14 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input type="password" placeholder="******" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                    </CardContent>
+                    <CardFooter>
                       <Button 
                         type="submit" 
                         className="w-full" 
@@ -158,23 +144,23 @@ export default function AuthPage() {
                           "Login"
                         )}
                       </Button>
-                    </form>
-                  </Form>
-                </CardContent>
+                    </CardFooter>
+                  </form>
+                </Form>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="register">
               <Card>
                 <CardHeader>
-                  <CardTitle>Create Account</CardTitle>
+                  <CardTitle>Create an account</CardTitle>
                   <CardDescription>
-                    Register to start creating your morphological boxes
+                    Enter your details to create a new account
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)}>
+                    <CardContent className="space-y-4">
                       <FormField
                         control={registerForm.control}
                         name="username"
@@ -195,7 +181,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="email@example.com" {...field} />
+                              <Input type="email" placeholder="your@email.com" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -208,7 +194,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input type="password" placeholder="******" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -221,12 +207,14 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Confirm Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input type="password" placeholder="******" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                    </CardContent>
+                    <CardFooter>
                       <Button 
                         type="submit" 
                         className="w-full" 
@@ -241,104 +229,56 @@ export default function AuthPage() {
                           "Register"
                         )}
                       </Button>
-                    </form>
-                  </Form>
-                </CardContent>
+                    </CardFooter>
+                  </form>
+                </Form>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
+      </div>
 
-        {/* Hero Section */}
-        <div className="hidden md:block bg-gradient-to-br from-primary to-secondary rounded-lg p-8 text-white">
-          <div className="space-y-6">
-            <div className="text-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="mx-auto h-24 w-24 text-white/90"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                />
-              </svg>
-              <h2 className="mt-4 text-2xl font-bold">Morphological Analysis Made Easy</h2>
+      {/* Hero Section */}
+      <div className="flex-1 bg-primary-900 text-white p-12 hidden md:flex md:flex-col md:justify-center">
+        <div className="max-w-md mx-auto">
+          <h2 className="text-4xl font-bold mb-6">Morphological Box Tool</h2>
+          <p className="text-xl mb-8">
+            A powerful tool for systematic problem-solving and innovation through morphological analysis
+          </p>
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="bg-primary-700 p-2 rounded-full mt-1">
+                <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7.5 11L3.5 7L4.5 6L7.5 9L10.5 6L11.5 7L7.5 11Z" fill="currentColor" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Drag & Drop Interface</h3>
+                <p className="text-primary-200">Easily create and manage morphological boxes with intuitive controls</p>
+              </div>
             </div>
-            <ul className="space-y-4">
-              <li className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
+            <div className="flex items-start space-x-3">
+              <div className="bg-primary-700 p-2 rounded-full mt-1">
+                <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H3.5C3.22386 4 3 3.77614 3 3.5ZM1 6.5C1 5.67157 1.67157 5 2.5 5H12.5C13.3284 5 14 5.67157 14 6.5V11.5C14 12.3284 13.3284 13 12.5 13H2.5C1.67157 13 1 12.3284 1 11.5V6.5ZM2.5 6C2.22386 6 2 6.22386 2 6.5V11.5C2 11.7761 2.22386 12 2.5 12H12.5C12.7761 12 13 11.7761 13 11.5V6.5C13 6.22386 12.7761 6 12.5 6H2.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
                 </svg>
-                <span>Intuitive drag-and-drop interface</span>
-              </li>
-              <li className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Collaboration Features</h3>
+                <p className="text-primary-200">Work together with your team in real-time on complex problems</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="bg-primary-700 p-2 rounded-full mt-1">
+                <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3.5 2C3.22386 2 3 2.22386 3 2.5V12.5C3 12.7761 3.22386 13 3.5 13H11.5C11.7761 13 12 12.7761 12 12.5V6.5C12 6.22386 11.7761 6 11.5 6H10V4.5C10 4.22386 9.77614 4 9.5 4H8V2.5C8 2.22386 7.77614 2 7.5 2H3.5ZM4 3H7V5.5C7 5.77614 7.22386 6 7.5 6H9V12H4V3ZM8 5H9V4H8V5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
                 </svg>
-                <span>Create parameters and organize attributes</span>
-              </li>
-              <li className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span>Save, export, and share your work</span>
-              </li>
-              <li className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span>Collaborate in real-time with team members</span>
-              </li>
-            </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Export Options</h3>
+                <p className="text-primary-200">Export your work in multiple formats for presentations and reports</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
