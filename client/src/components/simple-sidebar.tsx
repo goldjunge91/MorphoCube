@@ -10,6 +10,8 @@ import {
   Settings, 
   LogOut 
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 interface SimpleSidebarProps {
   mobileOpen: boolean;
@@ -18,16 +20,10 @@ interface SimpleSidebarProps {
 
 export default function SimpleSidebar({ mobileOpen, setMobileOpen }: SimpleSidebarProps) {
   const [location] = useLocation();
+  const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
 
-  // Mock user data for development
-  const user = {
-    id: 1,
-    username: "User",
-    email: "user@example.com",
-    isAdmin: false
-  };
-
-  const initials = user.username ? user.username.slice(0, 2).toUpperCase() : "U";
+  const initials = user?.username ? user.username.slice(0, 2).toUpperCase() : "U";
 
   const navigationItems = [
     { 
@@ -104,8 +100,8 @@ export default function SimpleSidebar({ mobileOpen, setMobileOpen }: SimpleSideb
             </Avatar>
             
             <div>
-              <p className="text-sm font-medium text-gray-700">{user.username}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+              <p className="text-sm font-medium text-gray-700">{user?.username || "Guest"}</p>
+              <p className="text-xs text-gray-500">{user?.email || ""}</p>
             </div>
             
             <Button 
@@ -113,8 +109,30 @@ export default function SimpleSidebar({ mobileOpen, setMobileOpen }: SimpleSideb
               size="icon" 
               className="ml-auto text-gray-500 hover:text-gray-700"
               title="Logout"
+              onClick={() => {
+                logoutMutation.mutate(undefined, {
+                  onSuccess: () => {
+                    toast({
+                      title: "Logged out",
+                      description: "You have been logged out successfully.",
+                    });
+                  },
+                  onError: (error) => {
+                    toast({
+                      title: "Logout failed",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
+                });
+              }}
+              disabled={logoutMutation.isPending}
             >
-              <LogOut className="h-4 w-4" />
+              {logoutMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <LogOut className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
