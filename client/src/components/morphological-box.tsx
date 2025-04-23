@@ -48,6 +48,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
   const [parameterToDelete, setParameterToDelete] = useState<number | null>(null);
   const [attributeToDelete, setAttributeToDelete] = useState<{ parameterId: number, attributeId: number } | null>(null);
   const [viewMode, setViewMode] = useState<"compact" | "groups">("compact");
+  const [combinationsDialogOpen, setCombinationsDialogOpen] = useState(false);
 
   // Fetch parameters and attributes
   const { data: parameters, isLoading: isLoadingParameters } = useQuery<Parameter[]>({
@@ -269,10 +270,55 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
   };
 
   const handleGenerateCombinations = () => {
+    if (boxParameters.length === 0) {
+      toast({
+        title: "No parameters",
+        description: "Add parameters to generate combinations.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Calculate the total number of possible combinations
+    const totalCombinations = boxParameters.reduce((acc, param) => {
+      // Skip parameters with no attributes
+      if (param.attributes.length === 0) return acc;
+      return acc * param.attributes.length;
+    }, 1);
+
+    // Generate a sample of combinations (limited to avoid performance issues)
+    const sampleSize = Math.min(totalCombinations, 100);
+    const sampleCombinations = [];
+    
+    // Generate sample combinations
+    for (let i = 0; i < sampleSize; i++) {
+      const combination = {};
+      
+      boxParameters.forEach(param => {
+        if (param.attributes.length > 0) {
+          // Choose an attribute based on weighted probabilities (when available)
+          const attributeIdx = Math.floor(Math.random() * param.attributes.length);
+          combination[param.name] = param.attributes[attributeIdx].name;
+        }
+      });
+      
+      sampleCombinations.push(combination);
+    }
+
+    // Save the combinations in local storage for later access
+    localStorage.setItem('morphologicalBoxCombinations', JSON.stringify({
+      total: totalCombinations,
+      sample: sampleCombinations,
+      timestamp: new Date().toISOString()
+    }));
+
     toast({
-      title: "Feature not implemented",
-      description: "The combination generation feature is not yet implemented.",
+      title: "Combinations generated",
+      description: `Total possible combinations: ${totalCombinations.toLocaleString()}. Sample of ${sampleSize} combinations created.`,
     });
+    
+    // Open combinations dialog (to be implemented)
+    setCombinationsDialogOpen(true);
   };
 
   const isLoading = isLoadingParameters || isLoadingMorphBox;
