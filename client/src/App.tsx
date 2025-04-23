@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import SimpleHomePage from "@/pages/simple-home-page";
 import SimpleMyBoxesPage from "@/pages/simple-my-boxes-page";
-import TemplatesPage from "@/pages/templates-page";
+import SimpleTemplatesPage from "@/pages/simple-templates-page";
 import DragAndDropProvider from "@/lib/dnd-provider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -19,7 +19,7 @@ function App() {
           <Switch>
             <Route path="/" component={SimpleHomePage} />
             <Route path="/my-boxes" component={SimpleMyBoxesPage} />
-            <Route path="/templates" component={TemplatesPage} />
+            <Route path="/templates" component={SimpleTemplatesPage} />
             <Route component={NotFound} />
           </Switch>
         </DragAndDropProvider>
