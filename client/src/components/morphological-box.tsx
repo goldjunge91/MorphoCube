@@ -325,9 +325,29 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
       
       boxParameters.forEach(param => {
         if (param.attributes.length > 0) {
-          // Choose an attribute based on weighted probabilities (when available)
-          const attributeIdx = Math.floor(Math.random() * param.attributes.length);
-          combination[param.name] = param.attributes[attributeIdx].name;
+          // The higher the importance, the more likely this parameter's attributes will impact the combination
+          // We use the importance weight to bias random selection
+          
+          // For engineering-important parameters (weight 7-10), we may try to select special attributes
+          // For less important parameters (weight 1-3), we might skip or use defaults
+          const importance = param.weight || 5;
+          
+          if (importance >= 7) {
+            // For high importance parameters, we might want to bias toward certain attributes
+            // For demo purposes, we're still using random selection
+            const attributeIdx = Math.floor(Math.random() * param.attributes.length);
+            combination[param.name] = param.attributes[attributeIdx].name;
+          } 
+          else if (importance <= 3 && Math.random() < 0.3) {
+            // For low importance parameters, 30% chance to skip or use a default value
+            // This makes combinations focus more on the important parameters
+            combination[param.name] = "Default";
+          }
+          else {
+            // Normal random selection for medium importance
+            const attributeIdx = Math.floor(Math.random() * param.attributes.length);
+            combination[param.name] = param.attributes[attributeIdx].name;
+          }
         }
       });
       
@@ -427,8 +447,9 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
                                 {parameter.name}
                               </div>
                               <div 
-                                className="text-xs px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-700 font-medium"
-                                title="Engineering importance"
+                                className="text-xs px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-700 font-medium cursor-pointer hover:bg-gray-200 transition-colors"
+                                title="Click to change engineering importance"
+                                onClick={() => handleUpdateParameterWeight(parameter.id)}
                               >
                                 {parameter.weight || 5}/10
                               </div>

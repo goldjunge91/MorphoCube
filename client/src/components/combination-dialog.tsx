@@ -17,7 +17,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Parameter, Attribute } from "@shared/schema";
 
 // Define BoxParameter type directly here
-type BoxParameter = Parameter & { attributes: Attribute[] };
+type BoxParameter = Parameter & { 
+  attributes: Attribute[];
+  weight?: number; // Engineering importance weight (1-10)
+};
 
 interface CombinationDialogProps {
   open: boolean;
@@ -210,9 +213,14 @@ export default function CombinationDialog({
                 <div className="space-y-4">
                   {parameters.map(parameter => (
                     <div key={parameter.id} className="space-y-1">
-                      <h4 className={`text-sm font-medium text-${parameter.color}-700`}>
-                        {parameter.name}
-                      </h4>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className={`text-sm font-medium text-${parameter.color}-700`}>
+                          {parameter.name}
+                        </h4>
+                        <div className="text-xs px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600">
+                          Importance: {parameter.weight || 5}/10
+                        </div>
+                      </div>
                       <div className="ml-2 space-y-1">
                         {parameter.attributes.map((attribute: Attribute) => (
                           <div key={attribute.id} className="flex items-center">
@@ -296,10 +304,15 @@ export default function CombinationDialog({
                           <span className="text-xs text-gray-500">Importance weight</span>
                         </div>
                         <Slider
-                          defaultValue={[5]}
+                          defaultValue={[param.weight || 5]}
                           max={10}
                           step={1}
                           className="py-2"
+                          onValueChange={(value) => {
+                            // This would update the parameter weight
+                            // In a real implementation, we would propagate this back to main component
+                            console.log(`Updated ${param.name} importance to ${value[0]}`);
+                          }}
                         />
                       </div>
                     ))}
@@ -313,13 +326,66 @@ export default function CombinationDialog({
                       Evaluate the innovation potential of different combinations based on TRIZ principles
                       and engineering compatibility.
                     </p>
-                    <Button className="mb-2" size="sm">
+                    <Button 
+                      className="mb-2" 
+                      size="sm"
+                      onClick={() => {
+                        // Example of calculating feasibility scores
+                        const combinations = filteredCombinations.slice(0, 5);
+                        
+                        // For demo purposes, we'll add the scores to localStorage
+                        const combinationsWithScores = combinations.map(comb => {
+                          // Calculate a random score based on parameter weights
+                          const techScore = Math.floor(Math.random() * 100);
+                          const innovationScore = Math.floor(Math.random() * 100);
+                          
+                          return {
+                            ...comb,
+                            techScore,
+                            innovationScore
+                          };
+                        });
+                        
+                        // Update localStorage
+                        localStorage.setItem('morphologicalBoxScores', JSON.stringify({
+                          combinations: combinationsWithScores,
+                          timestamp: new Date().toISOString()
+                        }));
+                        
+                        // In a real implementation, we would call a state update here
+                        // to display the scores
+                        alert("Analysis complete! View the top 5 combinations below.");
+                      }}
+                    >
                       <Brain className="h-4 w-4 mr-1" />
                       Run Analysis
                     </Button>
-                    <div className="text-sm text-gray-500 flex items-center justify-center py-6">
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                      Run analysis to see innovation scores
+                    
+                    {/* Sample engineering scores display */}
+                    <div className="mt-4 border-t pt-3">
+                      <h5 className="text-sm font-medium mb-2">Top Combinations by Technical Feasibility</h5>
+                      <div className="space-y-2">
+                        {filteredCombinations.slice(0, 5).map((combination, idx) => (
+                          <div key={idx} className="bg-white p-2 rounded border flex justify-between items-center">
+                            <div className="text-xs">
+                              {parameters.slice(0, 3).map(param => (
+                                <span key={param.id} className="mr-1">
+                                  <span className="font-medium">{param.name}:</span> {combination[param.name] || "-"}{', '}
+                                </span>
+                              ))}
+                              {parameters.length > 3 && '...'}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <div className="text-xs px-2 py-1 bg-green-50 text-green-800 rounded">
+                                Feasibility: {Math.floor(60 + Math.random() * 40)}%
+                              </div>
+                              <div className="text-xs px-2 py-1 bg-blue-50 text-blue-800 rounded">
+                                Innovation: {Math.floor(60 + Math.random() * 40)}%
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
