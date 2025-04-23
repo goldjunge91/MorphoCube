@@ -53,7 +53,7 @@ export interface IStorage {
   deleteSharedAccess(id: number): Promise<boolean>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any type for session store to avoid TypeScript issues
 }
 
 export class MemStorage implements IStorage {
@@ -63,7 +63,7 @@ export class MemStorage implements IStorage {
   private morphBoxes: Map<number, MorphBox>;
   private sharedAccesses: Map<number, SharedAccess>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any type for session store
   
   private userCounter: number;
   private parameterCounter: number;

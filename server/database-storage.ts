@@ -15,7 +15,7 @@ import { eq, and, desc, asc, sql } from "drizzle-orm";
 const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any type for SessionStore to avoid TypeScript error
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
