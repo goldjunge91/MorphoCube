@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import Layout from "@/components/layout";
+import SimpleLayout from "@/components/simple-layout";
 import {
   Card,
   CardContent,
@@ -17,12 +17,11 @@ import {
   Share2,
   Clock,
   BoxSelect,
-  Users,
   Settings,
 } from "lucide-react";
 import { MorphBox } from "@shared/schema";
 
-export default function HomePage() {
+export default function SimpleHomePage() {
   const [, navigate] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -87,7 +86,7 @@ export default function HomePage() {
   };
 
   return (
-    <Layout title="Dashboard">
+    <SimpleLayout title="Dashboard">
       <div className="space-y-8">
         {/* Welcome Section */}
         <section>
@@ -95,7 +94,7 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                  Welcome, {mockUser.username}!
+                  Welcome, {user.username}!
                 </h1>
                 <p className="text-white/80 max-w-xl">
                   Create, analyze and manage your morphological boxes with our
@@ -129,7 +128,7 @@ export default function HomePage() {
                 {isLoading ? (
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 ) : (
-                  mockRecentBoxes?.length || 0
+                  recentBoxes?.length || 0
                 )}
               </p>
             </CardContent>
@@ -157,47 +156,24 @@ export default function HomePage() {
             </CardFooter>
           </Card>
 
-          {user?.isAdmin && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center">
-                  <Users className="mr-2 h-5 w-5 text-info" />
-                  User Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-500">
-                  Manage user accounts and permissions
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/admin/users")}>
-                  Manage Users
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
-
-          {!user?.isAdmin && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center">
-                  <Settings className="mr-2 h-5 w-5 text-warning" />
-                  Quick Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-500">
-                  Update your profile and preferences
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="ghost" size="sm">
-                  Open Settings
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Settings className="mr-2 h-5 w-5 text-warning" />
+                Quick Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Update your profile and preferences
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" size="sm">
+                Open Settings
+              </Button>
+            </CardFooter>
+          </Card>
         </section>
 
         {/* Recent Boxes */}
@@ -265,6 +241,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-    </Layout>
+    </SimpleLayout>
   );
 }
