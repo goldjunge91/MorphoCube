@@ -89,19 +89,16 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
+                className={`flex items-center px-4 py-2 rounded-md transition-colors
+                  ${
+                    location === item.href
+                      ? "text-primary bg-primary bg-opacity-10 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }
+                `}
               >
-                <a
-                  className={`flex items-center px-4 py-2 rounded-md transition-colors
-                    ${
-                      location === item.href
-                        ? "text-primary bg-primary bg-opacity-10 font-medium"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }
-                  `}
-                >
-                  {item.icon}
-                  <span className="ml-3">{item.label}</span>
-                </a>
+                {item.icon}
+                <span className="ml-3">{item.label}</span>
               </Link>
             ))}
 
@@ -115,19 +112,16 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
+                    className={`flex items-center px-4 py-2 mt-1 rounded-md transition-colors
+                      ${
+                        location === item.href
+                          ? "text-primary bg-primary bg-opacity-10 font-medium"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }
+                    `}
                   >
-                    <a
-                      className={`flex items-center px-4 py-2 mt-1 rounded-md transition-colors
-                        ${
-                          location === item.href
-                            ? "text-primary bg-primary bg-opacity-10 font-medium"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }
-                      `}
-                    >
-                      {item.icon}
-                      <span className="ml-3">{item.label}</span>
-                    </a>
+                    {item.icon}
+                    <span className="ml-3">{item.label}</span>
                   </Link>
                 ))}
               </div>
