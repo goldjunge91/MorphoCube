@@ -66,7 +66,19 @@ export default function CreateParameterDialog({
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const validAttributes = attributes.filter((attr) => attr.trim().length > 0);
+      // Filter out empty attributes and trim whitespace
+      const validAttributes = attributes
+        .map(attr => attr.trim())
+        .filter(attr => attr.length > 0);
+
+      if (validAttributes.length === 0) {
+        // Show error if no valid attributes
+        form.setError("name", { 
+          message: "At least one attribute is required" 
+        });
+        return;
+      }
+
       await onSubmit(
         {
           name: values.name,
@@ -75,6 +87,7 @@ export default function CreateParameterDialog({
         },
         validAttributes
       );
+      
       form.reset();
       setAttributes(["", ""]);
       onOpenChange(false);

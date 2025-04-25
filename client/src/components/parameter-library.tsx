@@ -33,26 +33,27 @@ export default function ParameterLibrary() {
       parameter: InsertParameter;
       attributes: string[];
     }) => {
-      const paramRes = await apiRequest("POST", "/api/parameters", parameter);
-      const paramData = await paramRes.json();
-      const createdAttributes = [];
+      const parameterResponse = await apiRequest(
+        "POST",
+        "/api/parameters",
+        parameter
+      );
+      const newParameter = await parameterResponse.json();
 
-      // Create attributes for the parameter
-      for (const attrName of attributes) {
-        if (attrName.trim()) {
-          const attrRes = await apiRequest("POST", "/api/attributes", {
-            name: attrName,
-            parameterId: paramData.id,
-          });
-          const attrData = await attrRes.json();
-          createdAttributes.push(attrData);
-        }
-      }
-      
-      return {
-        ...paramData,
-        attributes: createdAttributes
-      };
+      // Create attributes in parallel
+      const attributePromises = attributes.map(attributeName => 
+        apiRequest("POST", "/api/attributes", {
+          name: attributeName,
+          parameterId: newParameter.id,
+        })
+      );
+
+      await Promise.all(attributePromises);
+
+      // Invalidate parameters query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/parameters"] });
+
+      return newParameter;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/parameters"] });
