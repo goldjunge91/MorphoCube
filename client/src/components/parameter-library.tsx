@@ -13,35 +13,41 @@ export default function ParameterLibrary() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editingParameter, setEditingParameter] = useState<Parameter | undefined>(undefined);
+  const [editingParameter, setEditingParameter] = useState<
+    Parameter | undefined
+  >(undefined);
 
   // Fetch parameters
-  const { data: parameters, isLoading: isLoadingParameters } = useQuery<Parameter[]>({
+  const { data: parameters, isLoading: isLoadingParameters } = useQuery<
+    Parameter[]
+  >({
     queryKey: ["/api/parameters"],
   });
 
   // Create parameter mutation
   const createParameterMutation = useMutation({
-    mutationFn: async ({ 
-      parameter, 
-      attributes 
-    }: { 
-      parameter: InsertParameter, 
-      attributes: string[] 
+    mutationFn: async ({
+      parameter,
+      attributes,
+    }: {
+      parameter: InsertParameter;
+      attributes: string[];
     }) => {
       const paramRes = await apiRequest("POST", "/api/parameters", parameter);
       const paramData = await paramRes.json();
-      
+
       // Create attributes for the parameter
-      const attributePromises = attributes.map(attrName => {
-        if (attrName.trim()) {
-          return apiRequest("POST", "/api/attributes", {
-            name: attrName,
-            parameterId: paramData.id
-          });
-        }
-      }).filter(Boolean);
-      
+      const attributePromises = attributes
+        .map((attrName) => {
+          if (attrName.trim()) {
+            return apiRequest("POST", "/api/attributes", {
+              name: attrName,
+              parameterId: paramData.id,
+            });
+          }
+        })
+        .filter(Boolean);
+
       await Promise.all(attributePromises);
       return paramData;
     },
@@ -83,7 +89,10 @@ export default function ParameterLibrary() {
     },
   });
 
-  const handleCreateParameter = (parameter: InsertParameter, attributes: string[]) => {
+  const handleCreateParameter = (
+    parameter: InsertParameter,
+    attributes: string[],
+  ) => {
     createParameterMutation.mutate({ parameter, attributes });
   };
 
@@ -97,19 +106,20 @@ export default function ParameterLibrary() {
   };
 
   // Filter parameters based on search term
-  const filteredParameters = searchTerm && parameters
-    ? parameters.filter(param => 
-        param.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : parameters;
+  const filteredParameters =
+    searchTerm && parameters
+      ? parameters.filter((param) =>
+          param.name.toLowerCase().includes(searchTerm.toLowerCase()),
+        )
+      : parameters;
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="bg-gradient-to-r from-primary to-secondary text-white p-4 flex justify-between items-center">
         <h3 className="font-semibold">Parameter Library</h3>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="h-8 w-8 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full text-white"
           onClick={() => {
             setEditingParameter(undefined);
@@ -155,8 +165,8 @@ export default function ParameterLibrary() {
             ))
           ) : (
             <div className="text-center py-4 text-gray-500">
-              {searchTerm 
-                ? "No parameters match your search." 
+              {searchTerm
+                ? "No parameters match your search."
                 : "No parameters yet. Create your first one!"}
             </div>
           )}
