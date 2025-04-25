@@ -20,7 +20,7 @@ function isAuthenticated(req: Request, res: Response, next: Function) {
 
 // Admin middleware
 function isAdmin(req: Request, res: Response, next: Function) {
-  if (req.isAuthenticated() && req.user.isAdmin) {
+  if (req.isAuthenticated() && req.user!.isAdmin) {
     return next();
   }
   res.status(403).send("Forbidden");
@@ -101,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const paramData = insertParameterSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: req.user!.id
       });
       
       const parameter = await storage.createParameter(paramData);
@@ -116,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/parameters", isAuthenticated, async (req, res) => {
     try {
-      const parameters = await storage.getParametersByUserId(req.user.id);
+      const parameters = await storage.getParametersByUserId(req.user!.id);
       res.json(parameters);
     } catch (error) {
       res.status(500).send("Server error");
@@ -133,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user has access to this parameter
-      if (parameter.userId !== req.user.id && !req.user.isAdmin) {
+      if (parameter.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -153,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user has access to update this parameter
-      if (parameter.userId !== req.user.id && !req.user.isAdmin) {
+      if (parameter.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -174,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user has access to delete this parameter
-      if (parameter.userId !== req.user.id && !req.user.isAdmin) {
+      if (parameter.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -196,7 +196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send("Parameter not found");
       }
       
-      if (parameter.userId !== req.user.id && !req.user.isAdmin) {
+      if (parameter.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -220,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send("Parameter not found");
       }
       
-      if (parameter.userId !== req.user.id && !req.user.isAdmin) {
+      if (parameter.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -246,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send("Parameter not found");
       }
       
-      if (parameter.userId !== req.user.id && !req.user.isAdmin) {
+      if (parameter.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -272,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send("Parameter not found");
       }
       
-      if (parameter.userId !== req.user.id && !req.user.isAdmin) {
+      if (parameter.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -288,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const morphBoxData = insertMorphBoxSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: req.user!.id
       });
       
       const morphBox = await storage.createMorphBox(morphBoxData);
@@ -303,7 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/morphboxes", isAuthenticated, async (req, res) => {
     try {
-      const morphBoxes = await storage.getMorphBoxesByUserId(req.user.id);
+      const morphBoxes = await storage.getMorphBoxesByUserId(req.user!.id);
       res.json(morphBoxes);
     } catch (error) {
       res.status(500).send("Server error");
@@ -312,7 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/morphboxes/shared", isAuthenticated, async (req, res) => {
     try {
-      const sharedMorphBoxes = await storage.getMorphBoxesSharedWithUser(req.user.id);
+      const sharedMorphBoxes = await storage.getMorphBoxesSharedWithUser(req.user!.id);
       res.json(sharedMorphBoxes);
     } catch (error) {
       res.status(500).send("Server error");
@@ -338,11 +338,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user has access to this box
-      const isOwner = morphBox.userId === req.user.id;
+      const isOwner = morphBox.userId === req.user!.id;
       const isPublic = morphBox.isPublic;
-      const sharedAccess = await storage.getSharedAccessByUserAndBox(req.user.id, morphBoxId);
+      const sharedAccess = await storage.getSharedAccessByUserAndBox(req.user!.id, morphBoxId);
       
-      if (!isOwner && !isPublic && !sharedAccess && !req.user.isAdmin) {
+      if (!isOwner && !isPublic && !sharedAccess && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -363,11 +363,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user has edit access to this box
-      const isOwner = morphBox.userId === req.user.id;
-      const sharedAccess = await storage.getSharedAccessByUserAndBox(req.user.id, morphBoxId);
+      const isOwner = morphBox.userId === req.user!.id;
+      const sharedAccess = await storage.getSharedAccessByUserAndBox(req.user!.id, morphBoxId);
       const canEdit = sharedAccess && sharedAccess.canEdit;
       
-      if (!isOwner && !canEdit && !req.user.isAdmin) {
+      if (!isOwner && !canEdit && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -388,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user has delete access to this box (only owner or admin)
-      if (morphBox.userId !== req.user.id && !req.user.isAdmin) {
+      if (morphBox.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -410,7 +410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send("Morphological Box not found");
       }
       
-      if (morphBox.userId !== req.user.id && !req.user.isAdmin) {
+      if (morphBox.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sharedId = parseInt(req.params.id);
       
       // First get the shared access
-      const sharedAccess = await storage.getSharedAccesses.find(sa => sa.id === sharedId);
+      const sharedAccess = await storage.getSharedAccessById(sharedId);
       if (!sharedAccess) {
         return res.status(404).send("Shared access not found");
       }
@@ -446,7 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send("Morphological Box not found");
       }
       
-      if (morphBox.userId !== req.user.id && !req.user.isAdmin) {
+      if (morphBox.userId !== req.user!.id && !req.user!.isAdmin) {
         return res.status(403).send("Forbidden");
       }
       
