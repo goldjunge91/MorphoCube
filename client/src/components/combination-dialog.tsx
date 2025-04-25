@@ -9,18 +9,38 @@ import {
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Download, Sliders, Lightbulb, Brain, AlertCircle, SearchCode, Filter } from "lucide-react";
+import { Download, Sliders, Lightbulb, Brain, SearchCode, Filter } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Parameter, Attribute } from "@shared/schema";
+import { Parameter, Attribute, AttributeCompatibility } from "@shared/schema";
+import { CombinationEvaluator } from "@/lib/scoring";
 
 // Define BoxParameter type directly here
 type BoxParameter = Parameter & { 
   attributes: Attribute[];
   weight?: number; // Engineering importance weight (1-10)
 };
+
+// --- Placeholder Data ---
+// Updated type to match CombinationEvaluator expectation
+const compatibilityMatrix: AttributeCompatibility[] = [
+  // Example: { attribute1Id: 1, attribute2Id: 5, level: -1 },
+  // This should ideally be built based on user input or predefined rules
+];
+
+// Convert the Record to TRIZPrinciple[] as expected by CombinationEvaluator
+const trizPrinciplesData: Record<number, { name: string; description: string }> = {
+  1: { name: "Segmentation", description: "Divide an object..." },
+  2: { name: "Taking out", description: "Separate an interfering part..." },
+  // ... Add other principles
+};
+const trizPrinciples = Object.entries(trizPrinciplesData).map(([id, data]) => ({
+  id: parseInt(id),
+  ...data,
+  applicableToAttributeIds: [], // Add placeholder for required property
+}));
 
 interface CombinationDialogProps {
   open: boolean;
@@ -331,15 +351,33 @@ export default function CombinationDialog({
                       size="sm"
                       onClick={() => {
                         const evaluator = new CombinationEvaluator(
-                          compatibilityMatrix,
-                          trizPrinciples
+                          compatibilityMatrix, // Using placeholder with correct type
+                          trizPrinciples // Using placeholder converted to array
                         );
                         
                         const combinations = filteredCombinations.slice(0, 5);
                         const combinationsWithScores = combinations.map(comb => {
-                          const scores = evaluator.evaluateCombination(comb, parameters);
+                          // Transform Combination (Record<string, string>) to Record<string, number> (using attribute IDs)
+                          const combinationForEval: Record<string, number> = {};
+                          parameters.forEach(param => {
+                            const selectedAttrName = comb[param.name];
+                            if (selectedAttrName) {
+                              const selectedAttr = param.attributes.find(attr => attr.name === selectedAttrName);
+                              if (selectedAttr) {
+                                // Use parameter name as key and attribute ID as value
+                                combinationForEval[param.name] = selectedAttr.id; 
+                              } else {
+                                // Handle cases where attribute name might not match (e.g., "Default")
+                                // For now, we'll assign 0, assuming the evaluator can handle it.
+                                combinationForEval[param.name] = 0; 
+                              }
+                            }
+                          });
+
+                          // Pass the transformed combination and parameters
+                          const scores = evaluator.evaluateCombination(combinationForEval, parameters); 
                           return {
-                            ...comb,
+                            ...comb, // Keep original string-based combination for display
                             ...scores
                           };
                         }).filter(c => c.constraintsSatisfied);
