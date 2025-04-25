@@ -1,6 +1,5 @@
 import { useDrag } from "react-dnd";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { Parameter, Attribute } from "@shared/schema";
