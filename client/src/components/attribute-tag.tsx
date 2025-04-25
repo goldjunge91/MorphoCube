@@ -53,6 +53,7 @@ export default function AttributeTag({ attribute, color, onDelete }: AttributeTa
         getColorClasses(color),
         isDragging && "opacity-50"
       )}
+      data-attribute-id={attribute.id}
     >
       <span>{attribute.name}</span>
       <Button

@@ -22,7 +22,7 @@ interface MorphBoxToolbarProps {
   lastSaved?: string;
   isSaved?: boolean;
   collaborators?: { id: number; username: string }[];
-  onSave: () => void;
+  onSave: (content: { parameters: any; lastSaved: string }) => void; // Updated type
   onExport: (format: string) => void;
   onShare: (userId: number, canEdit: boolean) => void;
 }
@@ -61,21 +61,41 @@ export default function MorphBoxToolbar({
     setIsEditing(false);
   };
 
+  const handleSave = async () => {
+    // Get current parameters state from morphological box
+    const parameters = document.querySelectorAll('[data-parameter-id]');
+    const parameterData = Array.from(parameters).map(param => ({
+      id: parseInt(param.getAttribute('data-parameter-id') || '0'),
+      attributes: Array.from(param.querySelectorAll('[data-attribute-id]')).map(attr => ({
+        id: parseInt(attr.getAttribute('data-attribute-id') || '0'),
+        name: attr.textContent || ''
+      }))
+    }));
+
+    // Save the current state
+    const content = {
+      parameters: parameterData,
+      lastSaved: new Date().toISOString()
+    };
+
+    onSave(content);
+  };
+
   // Format the last saved time to a readable format
   const formatLastSaved = (timestamp?: string) => {
     if (!timestamp) return "Never";
-    
+
     const lastSavedDate = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - lastSavedDate.getTime();
     const diffMins = Math.round(diffMs / 60000);
-    
+
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
-    
+
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
   };
@@ -135,7 +155,7 @@ export default function MorphBoxToolbar({
             <ChevronDown className="h-4 w-4 ml-2" />
           </Button>
 
-          <Button size="sm" onClick={onSave}>
+          <Button size="sm" onClick={handleSave}> {/* Updated onClick */}
             <Save className="h-4 w-4 mr-2" />
             <span>Save</span>
           </Button>

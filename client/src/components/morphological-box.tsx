@@ -436,7 +436,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
               </TableHeader>
               <TableBody>
                 {boxParameters.map((parameter, index) => (
-                  <TableRow key={parameter.id} className="group hover:bg-gray-50">
+                  <TableRow key={parameter.id} className="group hover:bg-gray-50" data-parameter-id={parameter.id}>
                     <TableCell className="py-4">
                       <div className="flex items-center">
                         <div className={`h-4 w-1 bg-${parameter.color}-500 rounded-full mr-3`}></div>
