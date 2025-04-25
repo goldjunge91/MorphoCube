@@ -38,20 +38,21 @@ export default function ParameterLibrary() {
 
       // Create attributes for the parameter
       const attributePromises = attributes
-        .map((attrName) => {
-          if (attrName.trim()) {
-            return apiRequest("POST", "/api/attributes", {
-              name: attrName,
-              parameterId: paramData.id,
-            });
-          }
-        })
-        .filter(Boolean);
+        .filter(attrName => attrName.trim())
+        .map(attrName => 
+          apiRequest("POST", "/api/attributes", {
+            name: attrName,
+            parameterId: paramData.id,
+          }).then(res => res.json())
+        );
 
-      await Promise.all(attributePromises);
-      return paramData;
+      const createdAttributes = await Promise.all(attributePromises);
+      return {
+        ...paramData,
+        attributes: createdAttributes
+      };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/parameters"] });
       toast({
         title: `Parameter ${editingParameter ? "updated" : "created"}`,

@@ -64,9 +64,9 @@ export default function CreateParameterDialog({
     setAttributes(newAttributes);
   };
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     const validAttributes = attributes.filter((attr) => attr.trim().length > 0);
-    onSubmit(
+    await onSubmit(
       {
         name: values.name,
         color: values.color,
