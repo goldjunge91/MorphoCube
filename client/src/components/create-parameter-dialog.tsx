@@ -72,9 +72,10 @@ export default function CreateParameterDialog({
         .filter(attr => attr.length > 0);
 
       if (validAttributes.length === 0) {
-        // Show error if no valid attributes
-        form.setError("name", { 
-          message: "At least one attribute is required" 
+        toast({
+          title: "Error",
+          description: "At least one attribute is required",
+          variant: "destructive"
         });
         return;
       }

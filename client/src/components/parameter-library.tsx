@@ -41,18 +41,20 @@ export default function ParameterLibrary() {
       );
       const newParameter = await parameterResponse.json();
 
-      // Create attributes for the parameter
-      for (const attributeName of attributes) {
-        await apiRequest("POST", "/api/attributes", {
-          name: attributeName,
-          parameterId: newParameter.id
-        });
-      }
-
-      return newParameter;
-
       // Create attributes and collect their responses
       const attributePromises = attributes.map(async attributeName => {
+        const attrResponse = await apiRequest("POST", "/api/attributes", {
+          name: attributeName,
+          parameterId: newParameter.id,
+        });
+        return attrResponse.json();
+      });
+
+      const createdAttributes = await Promise.all(attributePromises);
+      return {
+        ...newParameter,
+        attributes: createdAttributes
+      };
         const attrRes = await apiRequest("POST", "/api/attributes", {
           name: attributeName,
           parameterId: newParameter.id,
