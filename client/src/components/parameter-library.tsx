@@ -35,20 +35,24 @@ export default function ParameterLibrary() {
     }) => {
       const paramRes = await apiRequest("POST", "/api/parameters", parameter);
       const paramData = await paramRes.json();
+      const createdAttributes = [];
 
       // Create attributes for the parameter
       for (const attrName of attributes) {
         if (attrName.trim()) {
-          await apiRequest("POST", "/api/attributes", {
+          const attrRes = await apiRequest("POST", "/api/attributes", {
             name: attrName,
             parameterId: paramData.id,
           });
+          const attrData = await attrRes.json();
+          createdAttributes.push(attrData);
         }
       }
       
-      // Fetch the updated parameter with attributes
-      const updatedParamRes = await apiRequest("GET", `/api/parameters/${paramData.id}`);
-      return updatedParamRes.json();
+      return {
+        ...paramData,
+        attributes: createdAttributes
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/parameters"] });
