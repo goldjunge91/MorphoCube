@@ -21,7 +21,7 @@ import { IStorage } from "./storage";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool, db } from "./db";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, desc, asc } from "drizzle-orm"; // Remove 'sql' import
 
 const PostgresSessionStore = connectPg(session);
 
@@ -30,7 +30,7 @@ export class DatabaseStorage implements IStorage {
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({
-      pool,
+      pool: pool as any, // Cast pool to any
       createTableIfMissing: true,
     });
   }
@@ -73,7 +73,8 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: number): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id));
-    return result.rowCount > 0;
+    // rowCount can be null, but null > 0 is false, so this check is safe
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -140,7 +141,8 @@ export class DatabaseStorage implements IStorage {
   async deleteParameter(id: number): Promise<boolean> {
     // Lösche den Parameter
     const result = await db.delete(parameters).where(eq(parameters.id, id));
-    return result.rowCount > 0;
+    // rowCount can be null, but null > 0 is false, so this check is safe
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Attribute operations
@@ -181,7 +183,8 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAttribute(id: number): Promise<boolean> {
     const result = await db.delete(attributes).where(eq(attributes.id, id));
-    return result.rowCount > 0;
+    // rowCount can be null, but null > 0 is false, so this check is safe
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Morphological Box operations
@@ -264,7 +267,8 @@ export class DatabaseStorage implements IStorage {
 
     // Delete the morphological box
     const result = await db.delete(morphBoxes).where(eq(morphBoxes.id, id));
-    return result.rowCount > 0;
+    // rowCount can be null, but null > 0 is false, so this check is safe
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getPublicMorphBoxes(): Promise<MorphBox[]> {
@@ -314,6 +318,14 @@ export class DatabaseStorage implements IStorage {
     return access;
   }
 
+  async getSharedAccessById(id: number): Promise<SharedAccess | undefined> {
+    const [access] = await db
+      .select()
+      .from(sharedAccess)
+      .where(eq(sharedAccess.id, id));
+    return access;
+  }
+
   async getSharedAccessesByUserId(userId: number): Promise<SharedAccess[]> {
     return db
       .select()
@@ -341,6 +353,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSharedAccess(id: number): Promise<boolean> {
     const result = await db.delete(sharedAccess).where(eq(sharedAccess.id, id));
-    return result.rowCount > 0;
+    // rowCount can be null, but null > 0 is false, so this check is safe
+    return (result.rowCount ?? 0) > 0;
   }
 }
