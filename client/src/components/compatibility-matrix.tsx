@@ -1,9 +1,7 @@
 
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Input } from "./ui/input";
 import { AttributeCompatibility, Attribute, CompatibilityLevel } from "@shared/schema";
 
 interface CompatibilityMatrixProps {
