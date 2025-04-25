@@ -9,6 +9,7 @@ import {
   Bell, 
   HelpCircle 
 } from "lucide-react";
+import { Toaster } from "@/components/ui/toaster"
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -98,9 +99,10 @@ export default function Layout({ children, title }: LayoutProps) {
             </svg>
             <span className="text-gray-700">{getPageTitle()}</span>
           </nav>
-          
+
           {children}
         </main>
+        <Toaster />
       </div>
     </div>
   );
