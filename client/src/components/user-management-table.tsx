@@ -51,8 +51,6 @@ import {
   Trash2, 
   Search, 
   XCircle, 
-  Check, 
-  X 
 } from "lucide-react";
 
 // User form schema
