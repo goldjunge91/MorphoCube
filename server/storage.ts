@@ -72,6 +72,7 @@ export interface IStorage {
     morphBoxId: number,
   ): Promise<SharedAccess | undefined>;
   getSharedAccessesByUserId(userId: number): Promise<SharedAccess[]>;
+  getSharedAccessById(id: number): Promise<SharedAccess | undefined>; // Add this line
   getMorphBoxesSharedWithUser(userId: number): Promise<MorphBox[]>;
   deleteSharedAccess(id: number): Promise<boolean>;
 
@@ -131,7 +132,10 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const user: User = {
       id,
-      ...insertUser,
+      email: insertUser.email,
+      username: insertUser.username,
+      password: insertUser.password,
+      isAdmin: insertUser.isAdmin ?? false, // Add default value
       createdAt: now,
     };
     this.users.set(id, user);
@@ -247,7 +251,11 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const morphBox: MorphBox = {
       id,
-      ...insertMorphBox,
+      title: insertMorphBox.title,
+      userId: insertMorphBox.userId,
+      description: insertMorphBox.description ?? null, // Add default value (or handle null appropriately)
+      isPublic: insertMorphBox.isPublic ?? false, // Add default value
+      content: insertMorphBox.content ?? {}, // Add default value
       createdAt: now,
       updatedAt: now,
     };
@@ -325,7 +333,9 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const sharedAccess: SharedAccess = {
       id,
-      ...insertSharedAccess,
+      userId: insertSharedAccess.userId,
+      morphBoxId: insertSharedAccess.morphBoxId,
+      canEdit: insertSharedAccess.canEdit ?? false, // Add default value
       createdAt: now,
     };
     this.sharedAccesses.set(id, sharedAccess);
@@ -357,6 +367,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.sharedAccesses.values()).filter(
       (access) => access.userId === userId,
     );
+  }
+
+  async getSharedAccessById(id: number): Promise<SharedAccess | undefined> {
+    return this.sharedAccesses.get(id);
   }
 
   async getMorphBoxesSharedWithUser(userId: number): Promise<MorphBox[]> {
