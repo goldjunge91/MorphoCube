@@ -2,36 +2,30 @@ import { useState, useEffect } from "react";
 import { useDrop } from "react-dnd";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { 
-  Parameter, 
-  Attribute, 
-  MorphBox, 
-  ParameterWithAttributes,
+import {
+  Parameter,
+  Attribute,
+  MorphBox,
   InsertAttribute,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
-  Grid, 
-  Layers, 
-  GripVertical, 
-  Pencil, 
-  Trash2, 
-  Plus, 
-  RotateCcw, 
-  GridIcon, 
+import {
+  Grid,
+  Layers,
+  GripVertical,
+  Trash2,
+  Plus,
+  RotateCcw,
+  GridIcon,
   Loader2,
-  Database, 
-  Sliders, 
-  BarChart
 } from "lucide-react";
 import AttributeTag from "./attribute-tag";
 import CombinationDialog from "./combination-dialog";
@@ -148,6 +142,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "PARAMETER",
     drop: (item: Parameter) => {
+      console.log("[MorphBox] Dropped item:", item); // DEBUG
       handleAddParameter(item);
     },
     collect: (monitor) => ({
@@ -173,9 +168,11 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
   }, [morphBox]);
 
   const handleAddParameter = async (parameter: Parameter) => {
+    console.log("[MorphBox] handleAddParameter called with:", parameter); // DEBUG
     // Check if parameter is already in the box
     const exists = boxParameters.some(p => p.id === parameter.id);
     if (exists) {
+      console.log("[MorphBox] Parameter already exists:", parameter.id); // DEBUG
       toast({
         title: "Parameter already added",
         description: "This parameter is already in your morphological box.",
@@ -186,24 +183,39 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
 
     // Fetch attributes for this parameter
     try {
+      console.log(`[MorphBox] Fetching attributes for parameter ID: ${parameter.id}`); // DEBUG
       const res = await fetch(`/api/parameters/${parameter.id}/attributes`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to fetch attributes");
-      
+
+      console.log("[MorphBox] Fetch response status:", res.status); // DEBUG
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("[MorphBox] Failed to fetch attributes:", errorText); // DEBUG
+        throw new Error(`API Error (${res.status}): ${errorText || 'Failed to fetch attributes'}`);
+      }
+
       const attributes = await res.json();
-      
+      console.log("[MorphBox] Fetched attributes:", attributes); // DEBUG
+
       // Add parameter with its attributes to the box
-      setBoxParameters(prev => [...prev, { ...parameter, attributes }]);
-      
+      const newParameter: BoxParameter = { ...parameter, attributes, weight: 5 }; // Add default weight
+      console.log("[MorphBox] Adding new parameter to state:", newParameter); // DEBUG
+      setBoxParameters(prev => {
+        const newState = [...prev, newParameter];
+        console.log("[MorphBox] New boxParameters state:", newState); // DEBUG
+        return newState;
+      });
+
       toast({
         title: "Parameter added",
         description: `${parameter.name} was added to your morphological box.`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("[MorphBox] Error in handleAddParameter:", error); // DEBUG
       toast({
-        title: "Error",
-        description: "Failed to add parameter to the box.",
+        title: "Error Adding Parameter",
+        description: `Failed to add parameter '${parameter.name}'. ${error.message}`,
         variant: "destructive",
       });
     }
@@ -286,16 +298,6 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
         description: "Your morphological box has been reset.",
       });
     }
-  };
-
-  const handleSave = () => {
-    // Save the current state
-    const content = {
-      parameters: boxParameters,
-      lastSaved: new Date().toISOString()
-    };
-    
-    onSave(content);
   };
 
   const handleGenerateCombinations = () => {
@@ -407,25 +409,8 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : boxParameters.length === 0 ? (
-          // Empty state
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary bg-opacity-10 text-primary mb-4">
-              <GridIcon className="h-6 w-6" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Create Your Morphological Box
-            </h3>
-            <p className="text-gray-500 mb-4">
-              Drag parameters from the library to build your analysis
-            </p>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Parameter
-            </Button>
-          </div>
         ) : (
-          // Populated state
+          // Always render the table structure and drop zone
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -435,20 +420,35 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {boxParameters.length === 0 && ( // Show empty state message within the table if no parameters
+                  <TableRow>
+                    <TableCell colSpan={2} className="py-8">
+                      <div className="text-center text-gray-500">
+                        <GridIcon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-700 mb-2">
+                          Empty Morphological Box
+                        </h3>
+                        <p>
+                          Drag parameters from the library on the left to start building.
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
                 {boxParameters.map((parameter, index) => (
                   <TableRow key={parameter.id} className="group hover:bg-gray-50" data-parameter-id={parameter.id}>
-                    <TableCell className="py-4">
-                      <div className="flex items-center">
-                        <div className={`h-4 w-1 bg-${parameter.color}-500 rounded-full mr-3`}></div>
+                    <TableCell className="py-4 align-top"> {/* Use align-top */}
+                      <div className="flex items-start"> {/* Use items-start */}
+                        <div className={`h-4 w-1 bg-${parameter.color}-500 rounded-full mr-3 mt-1`}></div> {/* Adjust margin-top */}
                         <div className="flex-1">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between mb-1"> {/* Add margin-bottom */}
                             <div className="flex items-center">
                               <div className="text-sm font-medium text-gray-900 mr-2">
                                 {parameter.name}
                               </div>
-                              <div 
+                              <div
                                 className="text-xs px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-700 font-medium cursor-pointer hover:bg-gray-200 transition-colors"
-                                title="Click to change engineering importance"
+                                title="Click to change engineering importance (1-10)"
                                 onClick={() => handleUpdateParameterWeight(parameter.id)}
                               >
                                 {parameter.weight || 5}/10
@@ -462,12 +462,21 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
                                 onClick={() => handleMoveParameter(index, "up")}
                                 disabled={index === 0}
                               >
-                                <GripVertical className="h-3 w-3" />
+                                <GripVertical className="h-3 w-3 rotate-180" /> {/* Rotate for up */}
+                              </Button>
+                               <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-gray-400 hover:text-gray-600"
+                                onClick={() => handleMoveParameter(index, "down")}
+                                disabled={index === boxParameters.length - 1}
+                              >
+                                <GripVertical className="h-3 w-3" /> {/* Default for down */}
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-gray-400 hover:text-gray-600"
+                                className="h-6 w-6 text-gray-400 hover:text-red-600" // Hover red for delete
                                 onClick={() => handleRemoveParameter(parameter.id)}
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -477,8 +486,8 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2">
-                      <div className="flex flex-wrap gap-2">
+                    <TableCell className="py-4 align-top"> {/* Use align-top */}
+                      <div className="flex flex-wrap gap-2 items-center"> {/* Add items-center */}
                         {parameter.attributes.map((attribute) => (
                           <AttributeTag
                             key={attribute.id}
@@ -500,16 +509,17 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
                     </TableCell>
                   </TableRow>
                 ))}
-                {/* Drop zone */}
+                {/* Drop zone - Always visible at the bottom */}
                 <TableRow>
-                  <TableCell colSpan={2} className="py-6">
+                  <TableCell colSpan={2} className="py-4">
                     <div
                       ref={drop}
-                      className={`dropzone border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-gray-500 ${
-                        isOver ? "bg-primary/10" : ""
+                      className={`dropzone border-2 border-dashed rounded-lg p-4 text-center text-gray-500 transition-colors ${
+                        isOver ? "border-primary bg-primary/10" : "border-gray-300 hover:border-gray-400"
                       }`}
+                      style={{ minHeight: '60px' }} // Ensure dropzone has some height
                     >
-                      <p>Drag parameters here to add to your morphological box</p>
+                      <p>Drag parameters here to add</p>
                     </div>
                   </TableCell>
                 </TableRow>

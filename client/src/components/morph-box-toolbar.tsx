@@ -22,7 +22,7 @@ interface MorphBoxToolbarProps {
   lastSaved?: string;
   isSaved?: boolean;
   collaborators?: { id: number; username: string }[];
-  onSave: (content: { parameters: any; lastSaved: string }) => void; // Updated type
+  onSave: () => void; // Changed prop type
   onExport: (format: string) => void;
   onShare: (userId: number, canEdit: boolean) => void;
 }
@@ -33,7 +33,7 @@ export default function MorphBoxToolbar({
   lastSaved,
   isSaved = true,
   collaborators = [],
-  onSave,
+  onSave, // Use the prop directly
   onExport,
   onShare,
 }: MorphBoxToolbarProps) {
@@ -61,25 +61,8 @@ export default function MorphBoxToolbar({
     setIsEditing(false);
   };
 
-  const handleSave = async () => {
-    // Get current parameters state from morphological box
-    const parameters = document.querySelectorAll('[data-parameter-id]');
-    const parameterData = Array.from(parameters).map(param => ({
-      id: parseInt(param.getAttribute('data-parameter-id') || '0'),
-      attributes: Array.from(param.querySelectorAll('[data-attribute-id]')).map(attr => ({
-        id: parseInt(attr.getAttribute('data-attribute-id') || '0'),
-        name: attr.textContent || ''
-      }))
-    }));
-
-    // Save the current state
-    const content = {
-      parameters: parameterData,
-      lastSaved: new Date().toISOString()
-    };
-
-    onSave(content);
-  };
+  // Removed the internal handleSave function and its DOM querying logic.
+  // The onSave prop passed from the parent component handles the actual save logic.
 
   // Format the last saved time to a readable format
   const formatLastSaved = (timestamp?: string) => {
@@ -155,7 +138,7 @@ export default function MorphBoxToolbar({
             <ChevronDown className="h-4 w-4 ml-2" />
           </Button>
 
-          <Button size="sm" onClick={handleSave}> {/* Updated onClick */}
+          <Button size="sm" onClick={onSave}> {/* Updated onClick to call prop directly */}
             <Save className="h-4 w-4 mr-2" />
             <span>Save</span>
           </Button>
