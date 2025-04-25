@@ -80,7 +80,9 @@ export const insertParameterSchema = createInsertSchema(parameters).pick({
 export const attributes = pgTable("attributes", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  parameterId: integer("parameter_id").notNull(),
+  parameterId: integer("parameter_id")
+    .notNull()
+    .references(() => parameters.id, { onDelete: "cascade" }),
 });
 
 export const insertAttributeSchema = createInsertSchema(attributes).pick({
