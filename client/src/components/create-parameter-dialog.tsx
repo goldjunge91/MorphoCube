@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X, Plus } from "lucide-react";
 import { Parameter, InsertParameter } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast"
+
 
 interface CreateParameterDialogProps {
   open: boolean;
@@ -41,7 +43,7 @@ export default function CreateParameterDialog({
   editingParameter,
 }: CreateParameterDialogProps) {
   const [attributes, setAttributes] = useState<string[]>(["", ""]);
-
+  const { toast } = useToast()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
