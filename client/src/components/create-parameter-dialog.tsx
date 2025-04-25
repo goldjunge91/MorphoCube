@@ -65,18 +65,22 @@ export default function CreateParameterDialog({
   };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    const validAttributes = attributes.filter((attr) => attr.trim().length > 0);
-    await onSubmit(
-      {
-        name: values.name,
-        color: values.color,
-        userId: 0, // This will be set on the server
-      },
-      validAttributes
-    );
-    form.reset();
-    setAttributes(["", ""]);
-    onOpenChange(false);
+    try {
+      const validAttributes = attributes.filter((attr) => attr.trim().length > 0);
+      await onSubmit(
+        {
+          name: values.name,
+          color: values.color,
+          userId: 0, // This will be set on the server
+        },
+        validAttributes
+      );
+      form.reset();
+      setAttributes(["", ""]);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Failed to create parameter:", error);
+    }
   };
 
   const colors = [
