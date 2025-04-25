@@ -33,6 +33,7 @@ export default function ParameterLibrary() {
       parameter: InsertParameter;
       attributes: string[];
     }) => {
+      // Create parameter
       const parameterResponse = await apiRequest(
         "POST",
         "/api/parameters",
@@ -40,20 +41,22 @@ export default function ParameterLibrary() {
       );
       const newParameter = await parameterResponse.json();
 
-      // Create attributes in parallel
-      const attributePromises = attributes.map(attributeName => 
-        apiRequest("POST", "/api/attributes", {
+      // Create attributes and collect their responses
+      const attributePromises = attributes.map(async attributeName => {
+        const attrRes = await apiRequest("POST", "/api/attributes", {
           name: attributeName,
           parameterId: newParameter.id,
-        })
-      );
+        });
+        return attrRes.json();
+      });
 
-      await Promise.all(attributePromises);
+      const createdAttributes = await Promise.all(attributePromises);
 
-      // Invalidate parameters query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ["/api/parameters"] });
-
-      return newParameter;
+      // Return parameter with its attributes
+      return {
+        ...newParameter,
+        attributes: createdAttributes
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/parameters"] });

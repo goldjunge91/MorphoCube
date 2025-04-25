@@ -78,12 +78,12 @@ export default function ParameterCard({ parameter, onEdit, onDelete }: Parameter
           </Button>
         </div>
       </div>
-      <div className={cn("mt-2 text-sm space-y-1", getTextColorClasses(parameter.color))}>
+      <div className={cn("mt-2 text-sm space-y-2", getTextColorClasses(parameter.color))}>
         <p>{parameter.attributes?.length || 0} attributes</p>
         {parameter.attributes && parameter.attributes.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {parameter.attributes.map(attr => (
-              <span key={attr.id} className="text-xs bg-white bg-opacity-50 px-2 py-0.5 rounded">
+              <span key={attr.id} className="text-xs bg-white/10 px-2 py-0.5 rounded">
                 {attr.name}
               </span>
             ))}
