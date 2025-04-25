@@ -77,6 +77,41 @@ export const sharedAccess = pgTable("shared_access", {
   userId: integer("user_id").notNull(),
   canEdit: boolean("can_edit").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+
+// Compatibility matrix types
+export type CompatibilityLevel = -2 | -1 | 0 | 1 | 2; // -2: Impossible, -1: Difficult, 0: Neutral, 1: Good, 2: Excellent
+
+export interface AttributeCompatibility {
+  attribute1Id: number;
+  attribute2Id: number;
+  level: CompatibilityLevel;
+  reason?: string;
+}
+
+export interface CombinationConstraint {
+  id: number;
+  attributeId: number;
+  requiredAttributeIds?: number[];
+  excludedAttributeIds?: number[];
+  minScore?: number;
+  maxScore?: number;
+}
+
+export interface TRIZPrinciple {
+  id: number;
+  name: string;
+  description: string;
+  applicableToAttributeIds: number[];
+}
+
+export interface CombinationScore {
+  technicalScore: number;
+  innovationScore: number;
+  compatibilityScore: number;
+  trizScore: number;
+  constraintsSatisfied: boolean;
+}
+
 });
 
 export const insertSharedAccessSchema = createInsertSchema(sharedAccess)

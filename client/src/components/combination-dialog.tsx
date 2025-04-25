@@ -323,28 +323,26 @@ export default function CombinationDialog({
                   <h4 className="text-sm font-medium mb-2">Innovation Assessment</h4>
                   <div className="p-3 bg-gray-50 rounded-md">
                     <p className="text-sm text-gray-600 mb-2">
-                      Evaluate the innovation potential of different combinations based on TRIZ principles
-                      and engineering compatibility.
+                      Advanced evaluation of combinations using TRIZ principles, compatibility matrices,
+                      and engineering constraints.
                     </p>
                     <Button 
                       className="mb-2" 
                       size="sm"
                       onClick={() => {
-                        // Example of calculating feasibility scores
-                        const combinations = filteredCombinations.slice(0, 5);
+                        const evaluator = new CombinationEvaluator(
+                          compatibilityMatrix,
+                          trizPrinciples
+                        );
                         
-                        // For demo purposes, we'll add the scores to localStorage
+                        const combinations = filteredCombinations.slice(0, 5);
                         const combinationsWithScores = combinations.map(comb => {
-                          // Calculate a random score based on parameter weights
-                          const techScore = Math.floor(Math.random() * 100);
-                          const innovationScore = Math.floor(Math.random() * 100);
-                          
+                          const scores = evaluator.evaluateCombination(comb, parameters);
                           return {
                             ...comb,
-                            techScore,
-                            innovationScore
+                            ...scores
                           };
-                        });
+                        }).filter(c => c.constraintsSatisfied);
                         
                         // Update localStorage
                         localStorage.setItem('morphologicalBoxScores', JSON.stringify({
