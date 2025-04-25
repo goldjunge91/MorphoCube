@@ -88,11 +88,17 @@ export default function CreateParameterDialog({
         validAttributes
       );
       
+      // Reset form and close dialog only after successful submission
       form.reset();
       setAttributes(["", ""]);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create parameter:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create parameter. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
