@@ -20,35 +20,35 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X, Plus } from "lucide-react";
-import { Parameter, InsertParameter } from "@shared/schema";
+import { MorphoParameter } from "@/types/parameter";
 import { useToast } from "@/hooks/use-toast";
-
 
 interface CreateParameterDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (parameter: InsertParameter, attributes: string[]) => void;
-  editingParameter?: Parameter;
+  onCreateParameter: (parameter: Omit<MorphoParameter, "id" | "created_at" | "updated_at">) => void;
 }
 
 const formSchema = z.object({
-  name: z.string().min(1, "Parameter name is required"),
-  color: z.string(),
+  name: z.string().min(1, { message: "Parametername ist erforderlich" }),
+  description: z.string().optional(),
+  color: z.string().optional(),
 });
 
 export default function CreateParameterDialog({
   open,
   onOpenChange,
-  onSubmit,
-  editingParameter,
+  onCreateParameter,
 }: CreateParameterDialogProps) {
   const [attributes, setAttributes] = useState<string[]>(["", ""]);
   const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: editingParameter?.name || "",
-      color: editingParameter?.color || "blue",
+      name: "",
+      description: "",
+      color: "blue",
     },
   });
 
@@ -66,61 +66,57 @@ export default function CreateParameterDialog({
     setAttributes(newAttributes);
   };
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      // Filter out empty attributes and trim whitespace
-      const validAttributes = attributes
-        .map(attr => attr.trim())
-        .filter(attr => attr.length > 0);
+  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+    // Filter out empty attributes and trim whitespace
+    const validAttributes = attributes
+      .map(attr => attr.trim())
+      .filter(attr => attr.length > 0);
 
-      if (validAttributes.length === 0) {
-        toast({
-          title: "Error",
-          description: "At least one attribute is required",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      await onSubmit(
-        {
-          name: values.name,
-          color: values.color,
-          userId: 0, // This will be set on the server
-        },
-        validAttributes
-      );
-
-      // Reset form and close dialog only after successful submission
-      form.reset();
-      setAttributes(["", ""]);
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to create parameter:", error);
+    if (validAttributes.length === 0) {
       toast({
-        title: "Error",
-        description: "Failed to create parameter. Please try again.",
+        title: "Fehler",
+        description: "Mindestens ein Attribut ist erforderlich",
         variant: "destructive"
       });
+      return;
     }
-  };
 
-  const colors = [
-    { name: "blue", bg: "bg-blue-500" },
-    { name: "purple", bg: "bg-purple-500" },
-    { name: "green", bg: "bg-green-500" },
-    { name: "red", bg: "bg-red-500" },
-    { name: "amber", bg: "bg-amber-500" },
-    { name: "indigo", bg: "bg-indigo-500" },
-  ];
+    // Erstelle die Attribut-Objekte mit den entsprechenden Eigenschaften
+    const attributeObjects = validAttributes.map((name, index) => ({
+      name,
+      order: index,
+      created_at: new Date(),
+      updated_at: new Date(),
+    }));
+
+    // Erstelle den Parameter mit den neuen Attributen
+    onCreateParameter({
+      name: values.name,
+      description: values.description,
+      color: values.color,
+      order: 0, // Wird in der übergeordneten Komponente überschrieben
+      morphological_box_id: "", // Wird in der übergeordneten Komponente überschrieben
+      attributes: attributeObjects.map((attr, index) => ({
+        id: `temp_${index}`, // Temporäre ID, wird in der übergeordneten Komponente überschrieben
+        name: attr.name,
+        order: attr.order,
+        parameter_id: "", // Wird in der übergeordneten Komponente überschrieben
+        created_at: attr.created_at,
+        updated_at: attr.updated_at,
+      })),
+    });
+
+    // Formular zurücksetzen und Dialog schließen
+    form.reset();
+    setAttributes(["", ""]);
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {editingParameter ? "Edit Parameter" : "Create New Parameter"}
-          </DialogTitle>
+          <DialogTitle>Neuen Parameter erstellen</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -130,10 +126,28 @@ export default function CreateParameterDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Parameter Name</FormLabel>
+                  <FormLabel>Parametername</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter parameter name"
+                      placeholder="Name des Parameters eingeben"
+                      autoComplete="off"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Beschreibung (optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Beschreibung des Parameters"
                       autoComplete="off"
                       {...field}
                     />
@@ -148,17 +162,17 @@ export default function CreateParameterDialog({
               name="color"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Color</FormLabel>
+                  <FormLabel>Farbe</FormLabel>
                   <div className="flex space-x-2">
-                    {colors.map((color) => (
+                    {["blue", "purple", "green", "amber", "red", "indigo"].map((color) => (
                       <button
-                        key={color.name}
+                        key={color}
                         type="button"
-                        className={`w-8 h-8 rounded-full ${color.bg} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${color.name}-500 ${field.value === color.name
-                          ? `ring-2 ring-offset-2 ring-${color.name}-500`
-                          : ""
+                        className={`w-8 h-8 rounded-full bg-${color}-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${color}-500 ${field.value === color
+                            ? `ring-2 ring-offset-2 ring-${color}-500`
+                            : ""
                           }`}
-                        onClick={() => form.setValue("color", color.name)}
+                        onClick={() => form.setValue("color", color)}
                       />
                     ))}
                   </div>
@@ -167,12 +181,12 @@ export default function CreateParameterDialog({
             />
 
             <div>
-              <FormLabel>Attributes</FormLabel>
+              <FormLabel>Attribute</FormLabel>
               <div className="space-y-2 mt-2">
                 {attributes.map((attribute, index) => (
                   <div key={index} className="flex items-center">
                     <Input
-                      placeholder="Enter attribute name"
+                      placeholder="Name des Attributs eingeben"
                       value={attribute}
                       onChange={(e) => updateAttribute(index, e.target.value)}
                       className="flex-1"
@@ -198,7 +212,7 @@ export default function CreateParameterDialog({
                 onClick={addAttribute}
               >
                 <Plus className="h-4 w-4 mr-1" />
-                <span>Add another attribute</span>
+                <span>Weiteres Attribut hinzufügen</span>
               </Button>
             </div>
 
@@ -208,10 +222,10 @@ export default function CreateParameterDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+                Abbrechen
               </Button>
               <Button type="submit">
-                {editingParameter ? "Update" : "Create"}
+                Erstellen
               </Button>
             </DialogFooter>
           </form>

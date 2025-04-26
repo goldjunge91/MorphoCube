@@ -1,492 +1,351 @@
-import { useEffect, useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Download, Sliders, Lightbulb, Brain, SearchCode, Filter } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Parameter, Attribute, AttributeCompatibility } from "@shared/schema";
-import { CombinationEvaluator } from "@/lib/scoring";
-
-// Define BoxParameter type directly here
-type BoxParameter = Parameter & {
-  attributes: Attribute[];
-  weight?: number; // Engineering importance weight (1-10)
-};
-
-// --- Placeholder Data ---
-// Updated type to match CombinationEvaluator expectation
-const compatibilityMatrix: AttributeCompatibility[] = [
-  // Example: { attribute1Id: 1, attribute2Id: 5, level: -1 },
-  // This should ideally be built based on user input or predefined rules
-];
-
-// Convert the Record to TRIZPrinciple[] as expected by CombinationEvaluator
-const trizPrinciplesData: Record<number, { name: string; description: string; }> = {
-  1: { name: "Segmentation", description: "Divide an object..." },
-  2: { name: "Taking out", description: "Separate an interfering part..." },
-  // ... Add other principles
-};
-const trizPrinciples = Object.entries(trizPrinciplesData).map(([id, data]) => ({
-  id: parseInt(id),
-  ...data,
-  applicableToAttributeIds: [], // Add placeholder for required property
-}));
+import { MorphologicalBox, Solution } from "@/types/parameter";
+import AttributeTag from "./attribute-tag";
 
 interface CombinationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  parameters: BoxParameter[];
-}
-
-type Combination = Record<string, string>;
-
-interface CombinationData {
-  total: number;
-  sample: Combination[];
-  timestamp: string;
+  morphologicalBox: MorphologicalBox | null;
+  onCreateSolution: (solution: Omit<Solution, "id" | "created_at" | "updated_at">) => void;
 }
 
 export default function CombinationDialog({
   open,
   onOpenChange,
-  parameters,
+  morphologicalBox,
+  onCreateSolution
 }: CombinationDialogProps) {
-  const [combinationData, setCombinationData] = useState<CombinationData | null>(null);
-  const [filteredCombinations, setFilteredCombinations] = useState<Combination[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("combinations");
-  const [sortBy, setSortBy] = useState("random");
-  const [filterConfig, setFilterConfig] = useState<Record<string, string[]>>({});
+  const [activeTab, setActiveTab] = useState<string>("manual");
+  const [solutionName, setSolutionName] = useState<string>("");
+  const [solutionDescription, setSolutionDescription] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
+  const [feasibilityRating, setFeasibilityRating] = useState<number>(50);
+  const [costRating, setCostRating] = useState<number>(50);
+  const [innovationRating, setInnovationRating] = useState<number>(50);
 
-  // Load combinations from local storage
+  // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      const savedData = localStorage.getItem('morphologicalBoxCombinations');
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData) as CombinationData;
-          setCombinationData(parsed);
-          setFilteredCombinations(parsed.sample);
-        } catch (error) {
-          console.error("Error parsing saved combinations:", error);
-        }
-      }
+      setSolutionName("");
+      setSolutionDescription("");
+      setNotes("");
+      setSelectedAttributes({});
+      setFeasibilityRating(50);
+      setCostRating(50);
+      setInnovationRating(50);
+      setActiveTab("manual");
     }
   }, [open]);
 
-  // Filter combinations based on search term and filters
-  useEffect(() => {
-    if (!combinationData) return;
+  const handleSelectAttribute = (parameterId: string, attributeId: string) => {
+    setSelectedAttributes(prev => ({
+      ...prev,
+      [parameterId]: attributeId
+    }));
+  };
 
-    let filtered = combinationData.sample;
+  const handleCreateSolution = () => {
+    if (!morphologicalBox) return;
 
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(combination =>
-        Object.entries(combination).some(([param, value]) =>
-          value.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          param.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-    }
+    // Sammle alle ausgewählten Attribut-IDs
+    const selected_attribute_ids = Object.values(selectedAttributes);
 
-    // Apply attribute filters
-    Object.entries(filterConfig).forEach(([param, selectedValues]) => {
-      if (selectedValues.length > 0) {
-        filtered = filtered.filter(combination =>
-          selectedValues.includes(combination[param])
-        );
+    // Berechne den durchschnittlichen Gesamtscore basierend auf den Bewertungen
+    const total_score = (feasibilityRating + (100 - costRating) + innovationRating) / 3;
+
+    const newSolution: Omit<Solution, "id" | "created_at" | "updated_at"> = {
+      name: solutionName,
+      description: solutionDescription,
+      morphological_box_id: morphologicalBox.id,
+      created_by_id: "user123", // Dies würde aus dem Authentifizierungskontext kommen
+      selected_attribute_ids,
+      total_score,
+      feasibility_score: feasibilityRating,
+      cost_score: costRating, // Niedrigere Kosten sind besser, daher wird es intern umgekehrt
+      innovation_score: innovationRating,
+      notes,
+    };
+
+    onCreateSolution(newSolution);
+  };
+
+  const handleAutomaticGeneration = () => {
+    if (!morphologicalBox) return;
+
+    // Simuliere einen Algorithmus zur automatischen Lösungsgenerierung
+    // In einer realen Implementierung würde hier eine Bewertung der Attributkompatibilitäten erfolgen
+
+    const newSelectedAttributes: Record<string, string> = {};
+
+    // Wähle für jeden Parameter ein zufälliges Attribut aus
+    morphologicalBox.parameters.forEach(parameter => {
+      if (parameter.attributes.length > 0) {
+        // In einer realen Implementierung würde man hier eine intelligentere Auswahl treffen
+        const randomIndex = Math.floor(Math.random() * parameter.attributes.length);
+        newSelectedAttributes[parameter.id] = parameter.attributes[randomIndex].id;
       }
     });
 
-    // Apply sorting
-    if (sortBy === "random") {
-      // Shuffle array for random sort
-      filtered = [...filtered].sort(() => Math.random() - 0.5);
-    }
-    // Other sorting methods can be implemented as needed
+    setSelectedAttributes(newSelectedAttributes);
+    setActiveTab("manual"); // Wechsle zum manuellen Tab, damit der Benutzer die Auswahl überprüfen kann
 
-    setFilteredCombinations(filtered);
-  }, [searchTerm, filterConfig, sortBy, combinationData]);
-
-  // Initialize filter configuration based on parameters
-  useEffect(() => {
-    if (parameters.length > 0) {
-      const newFilterConfig: Record<string, string[]> = {};
-      parameters.forEach(param => {
-        newFilterConfig[param.name] = [];
-      });
-      setFilterConfig(newFilterConfig);
-    }
-  }, [parameters]);
-
-  // Handle filter change
-  const handleFilterChange = (paramName: string, value: string, checked: boolean) => {
-    setFilterConfig(prev => {
-      const current = prev[paramName] || [];
-      if (checked) {
-        return { ...prev, [paramName]: [...current, value] };
-      } else {
-        return { ...prev, [paramName]: current.filter(v => v !== value) };
-      }
-    });
+    // Setze einen Standardnamen basierend auf der aktuellen Zeit
+    setSolutionName(`Automatische Lösung ${new Date().toLocaleTimeString()}`);
+    setSolutionDescription("Automatisch generierte Lösung mit optimierter Attributkompatibilität.");
   };
 
-  // Export combinations to CSV
-  const exportCSV = () => {
-    if (!filteredCombinations.length) return;
+  const isFormValid = () => {
+    if (!solutionName.trim()) return false;
 
-    // Get all parameter names
-    const headers = Object.keys(filteredCombinations[0]);
+    // Prüfe, ob für jeden Parameter ein Attribut ausgewählt wurde
+    if (!morphologicalBox) return false;
 
-    // Create CSV content
-    let csvContent = headers.join(",") + "\n";
+    const parameterCount = morphologicalBox.parameters.length;
+    const attributeSelectionCount = Object.keys(selectedAttributes).length;
 
-    filteredCombinations.forEach(combination => {
-      const row = headers.map(header => {
-        // Escape commas and quotes in values
-        const value = combination[header] || "";
-        return `"${value.replace(/"/g, '""')}"`;
-      });
-      csvContent += row.join(",") + "\n";
-    });
-
-    // Create and download the file
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `morphological-combinations-${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    return parameterCount === attributeSelectionCount;
   };
+
+  // Zähle, wie viele Parameter aktuell ein ausgewähltes Attribut haben
+  const selectedCount = morphologicalBox ?
+    Object.keys(selectedAttributes).length : 0;
+
+  const totalCount = morphologicalBox ?
+    morphologicalBox.parameters.length : 0;
+
+  const selectionProgress = totalCount > 0 ?
+    Math.round((selectedCount / totalCount) * 100) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold flex items-center">
-            <div className="bg-primary bg-opacity-10 p-2 rounded-full mr-2">
-              <Lightbulb className="h-5 w-5 text-primary" />
-            </div>
-            Solution Space Explorer
-          </DialogTitle>
+          <DialogTitle>Lösungskombination erstellen</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="combinations">Combinations</TabsTrigger>
-              <TabsTrigger value="analysis">Engineering Analysis</TabsTrigger>
-              <TabsTrigger value="compatibility">TRIZ Principles</TabsTrigger>
-            </TabsList>
+        {!morphologicalBox ? (
+          <Alert variant="destructive">
+            <AlertDescription>
+              Kein morphologischer Kasten geladen. Bitte laden Sie zuerst einen Kasten.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-2 mb-4">
+                <TabsTrigger value="manual">Manuelle Auswahl</TabsTrigger>
+                <TabsTrigger value="automatic">Automatische Generierung</TabsTrigger>
+              </TabsList>
 
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={exportCSV}>
-                <Download className="h-4 w-4 mr-1" />
-                Export CSV
-              </Button>
-            </div>
-          </div>
+              <TabsContent value="manual" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="solution-name">Name der Lösung</Label>
+                      <Input
+                        id="solution-name"
+                        value={solutionName}
+                        onChange={(e) => setSolutionName(e.target.value)}
+                        placeholder="Aussagekräftiger Name für diese Lösungskombination"
+                      />
+                    </div>
 
-          <div className="flex items-center mb-4 space-x-2">
-            <Input
-              placeholder="Search combinations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-xs"
-            />
+                    <div>
+                      <Label htmlFor="solution-description">Beschreibung</Label>
+                      <Textarea
+                        id="solution-description"
+                        value={solutionDescription}
+                        onChange={(e) => setSolutionDescription(e.target.value)}
+                        placeholder="Detaillierte Beschreibung der Lösung"
+                        rows={3}
+                      />
+                    </div>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="random">Random</SelectItem>
-                <SelectItem value="engineering">Engineering Feasibility</SelectItem>
-                <SelectItem value="innovative">Innovation Potential</SelectItem>
-              </SelectContent>
-            </Select>
+                    <div>
+                      <Label htmlFor="solution-notes">Notizen</Label>
+                      <Textarea
+                        id="solution-notes"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Zusätzliche Notizen, Überlegungen oder Referenzen"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
 
-            <Button variant="ghost" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <TabsContent value="combinations" className="flex-1 flex space-x-4 mt-0">
-            <div className="w-64 border rounded-md p-3 overflow-y-auto">
-              <h3 className="font-medium mb-2 text-sm">Filter by Attributes</h3>
-
-              <ScrollArea className="h-[50vh]">
-                <div className="space-y-4">
-                  {parameters.map(parameter => (
-                    <div key={parameter.id} className="space-y-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className={`text-sm font-medium text-${parameter.color}-700`}>
-                          {parameter.name}
-                        </h4>
-                        <div className="text-xs px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600">
-                          Importance: {parameter.weight || 5}/10
-                        </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="flex justify-between">
+                        <span>Technische Machbarkeit</span>
+                        <span className="text-muted-foreground">{feasibilityRating}%</span>
+                      </Label>
+                      <Slider
+                        value={[feasibilityRating]}
+                        min={0}
+                        max={100}
+                        step={1}
+                        onValueChange={(value) => setFeasibilityRating(value[0])}
+                        className="my-2"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Schwierig</span>
+                        <span>Leicht umsetzbar</span>
                       </div>
-                      <div className="ml-2 space-y-1">
-                        {parameter.attributes.map((attribute: Attribute) => (
-                          <div key={attribute.id} className="flex items-center">
-                            <input
-                              type="checkbox"
-                              id={`attr-${attribute.id}`}
-                              className="mr-2"
-                              checked={filterConfig[parameter.name]?.includes(attribute.name)}
-                              onChange={(e) => handleFilterChange(
-                                parameter.name,
-                                attribute.name,
-                                e.target.checked
-                              )}
+                    </div>
+
+                    <div>
+                      <Label className="flex justify-between">
+                        <span>Kosten</span>
+                        <span className="text-muted-foreground">{costRating}%</span>
+                      </Label>
+                      <Slider
+                        value={[costRating]}
+                        min={0}
+                        max={100}
+                        step={1}
+                        onValueChange={(value) => setCostRating(value[0])}
+                        className="my-2"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Niedrig</span>
+                        <span>Hoch</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="flex justify-between">
+                        <span>Innovationsgrad</span>
+                        <span className="text-muted-foreground">{innovationRating}%</span>
+                      </Label>
+                      <Slider
+                        value={[innovationRating]}
+                        min={0}
+                        max={100}
+                        step={1}
+                        onValueChange={(value) => setInnovationRating(value[0])}
+                        className="my-2"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Konventionell</span>
+                        <span>Hochinnovativ</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Attribut-Auswahl</Label>
+                        <span className="text-sm text-muted-foreground">{selectedCount}/{totalCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div
+                          className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                          style={{ width: `${selectionProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-md p-4 mt-4">
+                  <h3 className="text-sm font-medium mb-4">Parameter-Attribut-Auswahl</h3>
+                  <div className="space-y-4">
+                    {morphologicalBox.parameters.map((parameter) => (
+                      <div key={parameter.id} className="space-y-2">
+                        <Label>{parameter.name}</Label>
+                        <Select
+                          value={selectedAttributes[parameter.id] || ""}
+                          onValueChange={(value) => handleSelectAttribute(parameter.id, value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Attribut auswählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {parameter.attributes.map((attribute) => (
+                              <SelectItem key={attribute.id} value={attribute.id}>
+                                {attribute.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {selectedAttributes[parameter.id] && (
+                          <div className="mt-1">
+                            <AttributeTag
+                              attribute={parameter.attributes.find(a => a.id === selectedAttributes[parameter.id])!}
                             />
-                            <label htmlFor={`attr-${attribute.id}`} className="text-sm">
-                              {attribute.name}
-                            </label>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-
-            <div className="flex-1 border rounded-md p-3">
-              <div className="mb-2 flex justify-between items-center">
-                <h3 className="font-medium text-sm">
-                  Generated Combinations
-                  <span className="text-gray-500 ml-2">
-                    {filteredCombinations.length} of {combinationData?.total.toLocaleString() || 0}
-                  </span>
-                </h3>
-              </div>
-
-              <ScrollArea className="h-[50vh]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">#</TableHead>
-                      {parameters.map(param => (
-                        <TableHead key={param.id}>{param.name}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCombinations.map((combination, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{index + 1}</TableCell>
-                        {parameters.map(param => (
-                          <TableCell key={`${index}-${param.id}`} className="truncate max-w-[200px]">
-                            {combination[param.name] || "-"}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analysis" className="flex-1 mt-0">
-            <div className="border rounded-md p-4">
-              <div className="flex items-center mb-4">
-                <div className="p-2 rounded-full bg-primary bg-opacity-10 mr-2">
-                  <SearchCode className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="font-medium">Engineering Analysis</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Technical Feasibility Score</h4>
-                  <div className="p-3 bg-gray-50 rounded-md space-y-2">
-                    {parameters.map(param => (
-                      <div key={param.id} className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">{param.name}</span>
-                          <span className="text-xs text-gray-500">Importance weight</span>
-                        </div>
-                        <Slider
-                          defaultValue={[param.weight || 5]}
-                          max={10}
-                          step={1}
-                          className="py-2"
-                          onValueChange={(value) => {
-                            // This would update the parameter weight
-                            // In a real implementation, we would propagate this back to main component
-                            console.log(`Updated ${param.name} importance to ${value[0]}`);
-                          }}
-                        />
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
+              </TabsContent>
 
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Innovation Assessment</h4>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-600 mb-2">
-                      Advanced evaluation of combinations using TRIZ principles, compatibility matrices,
-                      and engineering constraints.
-                    </p>
-                    <Button
-                      className="mb-2"
-                      size="sm"
-                      onClick={() => {
-                        const evaluator = new CombinationEvaluator(
-                          compatibilityMatrix, // Using placeholder with correct type
-                          trizPrinciples // Using placeholder converted to array
-                        );
-
-                        const combinations = filteredCombinations.slice(0, 5);
-                        const combinationsWithScores = combinations.map(comb => {
-                          // Transform Combination (Record<string, string>) to Record<string, number> (using attribute IDs)
-                          const combinationForEval: Record<string, number> = {};
-                          parameters.forEach(param => {
-                            const selectedAttrName = comb[param.name];
-                            if (selectedAttrName) {
-                              const selectedAttr = param.attributes.find(attr => attr.name === selectedAttrName);
-                              if (selectedAttr) {
-                                // Use parameter name as key and attribute ID as value
-                                combinationForEval[param.name] = selectedAttr.id;
-                              } else {
-                                // Handle cases where attribute name might not match (e.g., "Default")
-                                // For now, we'll assign 0, assuming the evaluator can handle it.
-                                combinationForEval[param.name] = 0;
-                              }
-                            }
-                          });
-
-                          // Pass the transformed combination and parameters
-                          const scores = evaluator.evaluateCombination(combinationForEval, parameters);
-                          return {
-                            ...comb, // Keep original string-based combination for display
-                            ...scores
-                          };
-                        }).filter(c => c.constraintsSatisfied);
-
-                        // Update localStorage
-                        localStorage.setItem('morphologicalBoxScores', JSON.stringify({
-                          combinations: combinationsWithScores,
-                          timestamp: new Date().toISOString()
-                        }));
-
-                        // In a real implementation, we would call a state update here
-                        // to display the scores
-                        alert("Analysis complete! View the top 5 combinations below.");
-                      }}
-                    >
-                      <Brain className="h-4 w-4 mr-1" />
-                      Run Analysis
-                    </Button>
-
-                    {/* Sample engineering scores display */}
-                    <div className="mt-4 border-t pt-3">
-                      <h5 className="text-sm font-medium mb-2">Top Combinations by Technical Feasibility</h5>
-                      <div className="space-y-2">
-                        {filteredCombinations.slice(0, 5).map((combination, idx) => (
-                          <div key={idx} className="bg-white p-2 rounded border flex justify-between items-center">
-                            <div className="text-xs">
-                              {parameters.slice(0, 3).map(param => (
-                                <span key={param.id} className="mr-1">
-                                  <span className="font-medium">{param.name}:</span> {combination[param.name] || "-"}{', '}
-                                </span>
-                              ))}
-                              {parameters.length > 3 && '...'}
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <div className="text-xs px-2 py-1 bg-green-50 text-green-800 rounded">
-                                Feasibility: {Math.floor(60 + Math.random() * 40)}%
-                              </div>
-                              <div className="text-xs px-2 py-1 bg-blue-50 text-blue-800 rounded">
-                                Innovation: {Math.floor(60 + Math.random() * 40)}%
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+              <TabsContent value="automatic" className="space-y-4">
+                <div className="text-center p-6 border rounded-md">
+                  <h3 className="text-lg font-semibold mb-4">Automatische Lösungsgenerierung</h3>
+                  <p className="mb-6 text-gray-600">
+                    Basierend auf Kompatibilitätsbewertungen und Parametergewichtungen kann das System
+                    optimierte Lösungskombinationen vorschlagen. Dies ist besonders nützlich bei
+                    komplexen morphologischen Kästen mit vielen Parametern.
+                  </p>
+                  <Button onClick={handleAutomaticGeneration}>
+                    Optimale Lösung generieren
+                  </Button>
                 </div>
-              </div>
-            </div>
-          </TabsContent>
 
-          <TabsContent value="compatibility" className="flex-1 mt-0">
-            <div className="border rounded-md p-4">
-              <div className="flex items-center mb-4">
-                <div className="p-2 rounded-full bg-primary bg-opacity-10 mr-2">
-                  <Sliders className="h-5 w-5 text-primary" />
+                <div className="p-4 bg-primary/5 rounded-md">
+                  <h4 className="font-medium mb-2">Generierungsoptionen</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    In einer vollständigen Implementierung könnten hier weitere Optionen
+                    für den Generierungsalgorithmus angeboten werden:
+                  </p>
+                  <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                    <li>Optimierung nach technischer Machbarkeit</li>
+                    <li>Kostenminimierung</li>
+                    <li>Maximierung des Innovationsgrads</li>
+                    <li>Gleichgewichtete Optimierung aller Kriterien</li>
+                    <li>Generierung mehrerer Varianten</li>
+                  </ul>
                 </div>
-                <h3 className="font-medium">TRIZ Principles & Compatibility</h3>
-              </div>
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
 
-              <div className="text-sm">
-                <p className="mb-4">
-                  TRIZ principles can help identify innovative solutions and resolve engineering contradictions
-                  in your morphological analysis.
-                </p>
-
-                <h4 className="font-medium mb-2">Common Engineering Contradictions in Your Parameters:</h4>
-                <ul className="list-disc pl-5 mb-4 space-y-1">
-                  <li>Weight vs. Strength</li>
-                  <li>Speed vs. Precision</li>
-                  <li>Reliability vs. Complexity</li>
-                  <li>Power vs. Efficiency</li>
-                </ul>
-
-                <h4 className="font-medium mb-2">Suggested TRIZ Principles:</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <h5 className="font-medium mb-1">1. Segmentation</h5>
-                    <p className="text-xs text-gray-600">
-                      Divide an object into independent parts to increase modularity and adaptability.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <h5 className="font-medium mb-1">2. Taking out / Extraction</h5>
-                    <p className="text-xs text-gray-600">
-                      Extract only the necessary part of an object to reduce complexity.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <h5 className="font-medium mb-1">15. Dynamics</h5>
-                    <p className="text-xs text-gray-600">
-                      Make objects adjustable, adaptive, or allow for optimal operation.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <h5 className="font-medium mb-1">8. Anti-weight / Counterweight</h5>
-                    <p className="text-xs text-gray-600">
-                      Compensate for weight of an object by interaction with other forces.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <DialogFooter className="mt-4">
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            Abbrechen
+          </Button>
+          <Button
+            onClick={handleCreateSolution}
+            disabled={!isFormValid()}
+          >
+            Lösung erstellen
           </Button>
         </DialogFooter>
       </DialogContent>

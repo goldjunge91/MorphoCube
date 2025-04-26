@@ -1,23 +1,208 @@
-# Projekt: Entwicklung einer Morphologischen Kasten Webapp mit Drag-and-Drop und rollenbasierter Authentifizierung
+# MorphoCube: Eine moderne Webapp für Morphologische Analyse
 
-Entwickle eine webbasierte Anwendung zur Erstellung und Verwaltung morphologischer Kästen mit folgenden Kernfunktionalitäten:
+## Projektübersicht
 
-Implementiere ein rollenbasiertes Authentifizierungssystem mit mindestens zwei Benutzerrollen: Benutzer und Administrator. Beide Rollentypen sollen sich registrieren und anmelden können sowie ihr Profil verwalten können. Administratoren benötigen zusätzlich die Möglichkeit, alle Benutzerkonten zu verwalten, einschließlich des Erstellens, Bearbeitens und Deaktivierens von Konten.
+Schwerpunkt von MorphoCube richtet sich an Fachleute in den Bereichen Ingenieurwesen, Produktentwicklung, Forschung und Entwicklung sowie Innovationsmanagement.
+MorphoCube ist eine webbasierte Anwendung zur Erstellung und Verwaltung morphologischer Kästen mit einem intuitiven Drag-and-Drop-Interface und einem rollenbasierten Authentifizierungssystem. Die Anwendung ermöglicht es Benutzern, komplexe Problemstellungen systematisch zu untersuchen und innovative Lösungskonzepte zu entwickeln.
+### Was ist ein Morphologischer Kasten?
 
-Der Kern der Anwendung ist die Erstellung und Verwaltung morphologischer Kästen. Diese sollen eine intuitive Benutzeroberfläche bieten, die es ermöglicht, Parameter und deren Ausprägungen zu definieren, zu strukturieren und zu bearbeiten. Benutzer sollen ihre morphologischen Kästen speichern, laden und in gängige Formate wie PDF, Excel oder CSV exportieren können.
+Der Morphologische Kasten (auch bekannt als Zwicky-Box) ist eine systematische Kreativitätstechnik zur Problemlösung und Innovation. Er wurde von dem Schweizer Astrophysiker Fritz Zwicky entwickelt und strukturiert komplexe Probleme in:
 
-Eine zentrale Anforderung ist die Drag-and-Drop-Funktionalität. Parameter und Ausprägungen sollen per Drag-and-Drop neu angeordnet, gruppiert und kombiniert werden können. Das Interface soll ein intuitives Hinzufügen neuer Elemente durch Ziehen ermöglichen und visuell ansprechend gestaltet sein, einschließlich Farbkodierung für eine bessere Übersicht.
+- **Parameter**: Grundlegende Aspekte oder Funktionen eines Systems
+- **Ausprägungen**: Mögliche Variationen oder Lösungsoptionen für jeden Parameter
 
-Sowohl Benutzer als auch Administratoren sollen eigene Datenbanken für ihre morphologischen Kästen erstellen können. Diese Datenbanken sollen erweiterbar, editierbar und zwischen Benutzern teilbar sein. Implementiere eine leistungsfähige Suchfunktion sowie Möglichkeiten zur Kategorisierung und zum Tagging für eine bessere Organisation.
+Durch systematische Kombination dieser Elemente können umfassende Lösungsräume erkundet werden.
 
-Die Anwendung soll Kollaborationsfunktionen bieten, die es Benutzern ermöglichen, morphologische Kästen mit anderen zu teilen und gemeinsam in Echtzeit zu bearbeiten. Integriere eine Versionskontrolle zur Nachverfolgung von Änderungen sowie eine Kommentarfunktion für Diskussionen.
+## Kernfunktionalitäten
 
-Auf technischer Ebene sollte das Frontend als responsive Single-Page-Application mit einem modernen Framework wie React, Vue.js oder Angular umgesetzt werden. Die Benutzeroberfläche muss benutzerfreundlich und intuitiv sein, mit besonderem Fokus auf eine optimale Benutzererfahrung. Verwende eine geeignete Drag-and-Drop-Bibliothek wie React DnD oder SortableJS und stelle sicher, dass die Anwendung auf verschiedenen Geräten und Bildschirmgrößen funktioniert.
+### 1. Authentifizierung & Benutzerverwaltung
+- Rollenbasiertes System mit mehreren Benutzerebenen:
+  - **Benutzer**: Erstellen und verwalten eigener morphologischer Kästen
+  - **Tenant-Administrator**: Verwaltung von Benutzern innerhalb eines Mandanten
+  - **Super-Administrator**: Systemweite Verwaltung und Konfiguration
+- Sichere Anmeldung mit JWT-Authentifizierung
+- Profilmanagement für alle Benutzer
 
-Das Backend sollte eine RESTful API oder GraphQL für die Kommunikation mit dem Frontend bereitstellen und ein sicheres Authentifizierungssystem mit JWT oder ähnlichen Technologien implementieren. Die Datenbankanbindung kann je nach Anforderungen SQL oder NoSQL sein, muss jedoch eine flexible Struktur für die Speicherung morphologischer Kästen bieten und performante Abfragen auch bei größeren Datenmengen ermöglichen.
+### 2. Morphologischer Kasten - Editor
+- Intuitive Benutzeroberfläche zur Definition von Parametern und Ausprägungen
+- Drag-and-Drop-Funktionalität für:
+  - Neuanordnung von Parametern und Ausprägungen
+  - Gruppierung verwandter Elemente
+  - Kombination von Ausprägungen für Lösungskonzepte
+- Farbkodierung für bessere Visualisierung und Organisation
+- Versionskontrolle zur Nachverfolgung von Änderungen
+- Erweiterte Parameter-Metadaten:
+  - Gewichtung von Parametern nach Wichtigkeit
+  - Beschreibungstexte für komplexe Parameter
+  - Anhängen von Referenzen oder Erklärungen
+- Visuelle Pfade zur Darstellung ausgewählter Lösungskombinationen
 
-Lege besonderen Wert auf Sicherheitsaspekte wie die Verschlüsselung sensibler Daten, HTTPS-Verbindungen, Schutz vor gängigen Angriffen und datenschutzkonforme Speicherung von Benutzerdaten gemäß DSGVO.
+### 3. Datenbank & Organisation
+- Persönliche und geteilte Datenbanken für morphologische Kästen
+- Kategorisierung und Tagging-System
+- Leistungsfähige Suchfunktion
+- Vorlagen für schnellen Start
+- Branchenspezifische Vorlagen:
+  - Engineering Design
+  - Software-Architektur
+  - Produktentwicklung
+  - Strategische Planung
+- Bibliothek wiederverwendbarer Parameter und Ausprägungen
 
-Die Anwendung sollte mehrsprachig sein (mindestens Deutsch und Englisch), barrierefrei nach WCAG-Richtlinien und eine Offline-Funktionalität für grundlegende Operationen bieten. Achte auf eine leichte Erweiterbarkeit für zukünftige Funktionen.
+### 4. Zusammenarbeit & Teilung
+- Echtzeit-Kollaboration an gemeinsamen Projekten
+- Differenzierte Zugriffsrechte (Lesen/Schreiben)
+- Kommentarfunktion für Diskussionen
+- Benachrichtigungen bei Änderungen
+- Strukturierte Feedback-Runden mit Stakeholdern
+- Abstimmungsfunktion für Teams zur Bewertung von Lösungskombinationen
 
-Das erwartete Endergebnis ist eine voll funktionsfähige Webanwendung, die es Benutzern ermöglicht, morphologische Kästen zu erstellen, zu bearbeiten, zu teilen und zu verwalten, mit einem intuitiven Drag-and-Drop-Interface und einem rollenbasierten Authentifizierungssystem.​​​​​​​​​​​​​​​​
+### 5. Export & Integration
+- Export in gängige Formate (PDF, Excel, CSV)
+- API-Schnittstelle für Integration mit anderen Tools
+- Offline-Funktionalität für grundlegende Operationen
+- Embedding-Option für Präsentationen und Berichte
+- Generierung interaktiver Visualisierungen für Präsentationen
+
+### 6. Analyse & Bewertungstools
+- Kompatibilitätsmatrizen zur Bewertung der Verträglichkeit zwischen Ausprägungen
+- Scoring-Module zur qualitativen und quantitativen Bewertung von Lösungskombinationen
+- Konsistenzprüfung für ausgewählte Lösungswege
+- Automatische Generierung vielversprechender Lösungskombinationen
+- Bewertungsfilter basierend auf:
+  - Technischer Machbarkeit
+  - Kosten und Ressourceneffizienz
+  - Innovationsgrad
+  - Benutzerdefinierte Kriterien
+
+### 7. Erweiterte Visualisierung
+- Heatmaps zur Darstellung von Bewertungsmetriken
+- Netzwerkgraphen zur Visualisierung von Parameterbeziehungen
+- Interaktive 3D-Darstellung für komplexe Lösungsräume
+- Dashboard mit Key Performance Indicators für Lösungskonzepte
+- Exportierbare Entscheidungsbäume
+
+## Technische Architektur
+
+### Frontend
+- React mit TypeScript für typsichere Entwicklung
+- Tailwind CSS für responsive Gestaltung
+- Shadcn UI-Komponenten für konsistentes Design
+- React DnD für Drag-and-Drop-Funktionalität
+- React Query für effizientes State-Management
+- D3.js und react-chartjs-2 für komplexe Datenvisualisierungen
+
+### Backend
+- Node.js mit Express
+- RESTful API-Design
+- JWT für sichere Authentifizierung
+- Drizzle ORM mit PostgreSQL für relationale Datenspeicherung
+- Zod für Validierung und TypeScript-Integration
+- WebSocket-Implementierung für Echtzeit-Kollaboration
+
+### Datenmodell
+- Flexible Schemastrukturen für morphologische Kästen
+- Versionierung und Änderungsverfolgung
+- Beziehungsmodelle für Parameter-Interdependenzen
+- Metadaten-Framework für erweiterte Attributierung
+- Tenant-Isolation für Multi-Mandanten-Betrieb
+
+### Deployment & DevOps
+- Docker-Container für einfache Bereitstellung
+- CI/CD-Pipeline für automatisierte Tests und Deployment
+- Monitoring und Logging für Systemstabilität
+- Skalierbare Cloud-Infrastruktur
+
+## Anwendungsfälle
+
+### Produktentwicklung
+- Systematische Exploration alternativer Produktarchitekturen
+- Identifikation neuartiger Kombinationen bestehender Technologien
+- Bewertung verschiedener Designalternativen anhand definierter Kriterien
+
+### Strategische Planung
+- Entwicklung von Zukunftsszenarien durch systematische Kombination von Einflussfaktoren
+- Bewertung strategischer Optionen und Entscheidungsalternativen
+- Identifikation blinder Flecken in der Strategieentwicklung
+
+### Problemlösung im Engineering
+- Strukturierte Zerlegung komplexer technischer Herausforderungen
+- Systematische Generierung von Lösungsalternativen
+- Bewertung von Konzepten nach technischer Machbarkeit und Ressourceneffizienz
+
+### Innovation und Kreativität
+- Überwindung von Denkblockaden durch systematische Exploration
+- Entdeckung unkonventioneller Lösungsansätze
+- Kombinatorische Innovation durch Neukombination bestehender Elemente
+
+## Entwicklungsfahrplan
+
+### Phase 1: Grundlegende Infrastruktur (Abgeschlossen)
+- Projektsetup und Grundarchitektur
+- Authentifizierungssystem und Benutzerverwaltung
+- Basiskomponenten UI-Bibliothek
+
+### Phase 2: Kern-Editor (Aktuell)
+- Umsetzung des Drag-and-Drop-Editors für morphologische Kästen
+- CRUD-Operationen für Parameter und Ausprägungen
+- Persistenz der erstellten Kästen
+
+### Phase 3: Kollaboration & Erweiterung
+- Implementierung der Sharing-Funktionalität
+- Echtzeit-Kollaboration
+- Versionskontrolle und Änderungsverfolgung
+
+### Phase 4: Erweitertes Feature-Set
+- Erweiterte Exportfunktionen
+- Vorlagen-System
+- Analysetools für morphologische Kästen
+- Kompatibilitätsmatrizen für Parameter-Ausprägungen
+
+### Phase 5: Optimierung & Finalisierung
+- Performance-Optimierung
+- Erweiterte Suchfunktionen
+- Multi-Tenant-Fähigkeiten
+- Mehrsprachigkeit (Deutsch/Englisch)
+
+### Phase 6: Branchen-Spezialisierung
+- Entwicklung branchenspezifischer Module
+- Integration von Fachterminologie
+- Vorlagen für spezifische Anwendungsdomänen
+- Anpassung an domänenspezifische Best Practices
+
+### Phase 7: KI-Erweiterungen
+- Implementierung von Vorschlagsalgorithmen für Parameter und Ausprägungen
+- Automatisierte Bewertungshilfen für generierte Lösungskombinationen
+- Semantische Analyse von Parameterbeschreibungen
+- Lernende Systeme zur kontinuierlichen Verbesserung der Vorschläge
+
+## Installation und Entwicklung
+
+### Voraussetzungen
+- Node.js (v18 oder höher)
+- PostgreSQL (v14 oder höher)
+- pnpm als Paketmanager
+
+### Entwicklungsserver starten
+```bash
+# Installation der Abhängigkeiten
+pnpm install
+
+# Umgebungsvariablen konfigurieren
+cp env.example .env
+# .env-Datei bearbeiten
+
+# Datenbank-Migrationen ausführen
+pnpm drizzle:push
+
+# Entwicklungsserver starten
+pnpm dev
+```
+
+## Mitwirken
+
+Beiträge zum Projekt sind willkommen! Bitte beachten Sie unsere Contribution Guidelines und den Code of Conduct.
+
+## Lizenz
+
+Dieses Projekt ist lizenziert unter [Lizenz einfügen].

@@ -2,15 +2,16 @@ import { useDrag } from "react-dnd";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
-import { Parameter, Attribute } from "@shared/schema";
+import { MorphoParameter } from "@/types/parameter";
 
-interface ParameterCardProps {
-  parameter: Parameter & { attributes?: Attribute[]; };
-  onEdit: (parameter: Parameter) => void;
-  onDelete: (parameterId: number) => void;
+export interface ParameterCardProps {
+  parameter: MorphoParameter;
+  onUpdate: (updatedParameter: MorphoParameter) => void;
+  onDelete: (parameterId: string) => void;
+  isReadOnly?: boolean;
 }
 
-export default function ParameterCard({ parameter, onEdit, onDelete }: ParameterCardProps) {
+export default function ParameterCard({ parameter, isReadOnly = false, onUpdate, onDelete }: ParameterCardProps) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "PARAMETER",
     item: parameter,
@@ -20,7 +21,9 @@ export default function ParameterCard({ parameter, onEdit, onDelete }: Parameter
   }));
 
   // Map color name to Tailwind classes
-  const getColorClasses = (color: string) => {
+  const getColorClasses = (color?: string) => {
+    if (!color) return "bg-gray-50 border-l-4 border-gray-500";
+
     const colorMap: Record<string, string> = {
       blue: "bg-blue-50 border-l-4 border-blue-500",
       purple: "bg-purple-50 border-l-4 border-purple-500",
@@ -33,7 +36,9 @@ export default function ParameterCard({ parameter, onEdit, onDelete }: Parameter
   };
 
   // Map color name to text color classes
-  const getTextColorClasses = (color: string) => {
+  const getTextColorClasses = (color?: string) => {
+    if (!color) return "text-gray-800";
+
     const colorMap: Record<string, string> = {
       blue: "text-blue-800",
       purple: "text-purple-800",
@@ -58,27 +63,29 @@ export default function ParameterCard({ parameter, onEdit, onDelete }: Parameter
         <h4 className={cn("font-medium", getTextColorClasses(parameter.color))}>
           {parameter.name}
         </h4>
-        <div className="flex space-x-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-gray-400 hover:text-gray-600"
-            onClick={() => onEdit(parameter)}
-          >
-            <Pencil className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-gray-400 hover:text-gray-600"
-            onClick={() => onDelete(parameter.id)}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
+        {!isReadOnly && (
+          <div className="flex space-x-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-gray-400 hover:text-gray-600"
+              onClick={() => onUpdate(parameter)}
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-gray-400 hover:text-gray-600"
+              onClick={() => onDelete(parameter.id)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
       </div>
       <div className={cn("mt-2 text-sm space-y-2", getTextColorClasses(parameter.color))}>
-        <p>{parameter.attributes?.length || 0} attributes</p>
+        <p>{parameter.attributes.length || 0} attributes</p>
         {parameter.attributes && parameter.attributes.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {parameter.attributes.map(attr => (

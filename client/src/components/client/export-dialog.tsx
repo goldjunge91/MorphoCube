@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,24 +7,35 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { FileText, FileSpreadsheet, FileJson } from "lucide-react";
+import { Download } from "lucide-react";
+import { MorphologicalBox } from "@/types/parameter";
 
 interface ExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onExport: (format: string) => void;
+  morphologicalBox?: MorphologicalBox | null;
 }
 
 export default function ExportDialog({
   open,
   onOpenChange,
   onExport,
+  morphologicalBox,
 }: ExportDialogProps) {
-  const [format, setFormat] = useState("pdf");
+  const [format, setFormat] = useState<string>("json");
+  const [includeCompatibility, setIncludeCompatibility] = useState(true);
+  const [includeSolutions, setIncludeSolutions] = useState(true);
 
   const handleExport = () => {
     onExport(format);
@@ -34,60 +46,65 @@ export default function ExportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Export Morphological Box</DialogTitle>
+          <DialogTitle>Morphologischen Kasten exportieren</DialogTitle>
           <DialogDescription>
-            Choose a format to export your morphological box
+            Exportieren Sie Ihren morphologischen Kasten in verschiedenen Formaten
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
-          <RadioGroup value={format} onValueChange={setFormat} className="space-y-4">
-            <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer transition-colors">
-              <RadioGroupItem value="pdf" id="pdf" />
-              <Label htmlFor="pdf" className="flex items-center cursor-pointer">
-                <FileText className="h-5 w-5 mr-2 text-primary" />
-                <div>
-                  <div className="font-medium">PDF Document</div>
-                  <div className="text-sm text-gray-500">
-                    Export as a formatted PDF document
-                  </div>
-                </div>
-              </Label>
-            </div>
+        <div className="py-4 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="format">Exportformat</Label>
+            <Select value={format} onValueChange={setFormat}>
+              <SelectTrigger>
+                <SelectValue placeholder="Format auswählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="json">JSON</SelectItem>
+                <SelectItem value="csv">CSV</SelectItem>
+                <SelectItem value="excel">Excel</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer transition-colors">
-              <RadioGroupItem value="excel" id="excel" />
-              <Label htmlFor="excel" className="flex items-center cursor-pointer">
-                <FileSpreadsheet className="h-5 w-5 mr-2 text-green-600" />
-                <div>
-                  <div className="font-medium">Excel Spreadsheet</div>
-                  <div className="text-sm text-gray-500">
-                    Export as an Excel file for data analysis
-                  </div>
-                </div>
-              </Label>
+          <div className="space-y-2">
+            <Label>Exportoptionen</Label>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="include-compatibility"
+                checked={includeCompatibility}
+                onCheckedChange={(checked) => setIncludeCompatibility(checked as boolean)}
+              />
+              <Label htmlFor="include-compatibility">Kompatibilitätsdaten einschließen</Label>
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="include-solutions"
+                checked={includeSolutions}
+                onCheckedChange={(checked) => setIncludeSolutions(checked as boolean)}
+              />
+              <Label htmlFor="include-solutions">Lösungen einschließen</Label>
+            </div>
+          </div>
 
-            <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer transition-colors">
-              <RadioGroupItem value="json" id="json" />
-              <Label htmlFor="json" className="flex items-center cursor-pointer">
-                <FileJson className="h-5 w-5 mr-2 text-blue-500" />
-                <div>
-                  <div className="font-medium">JSON</div>
-                  <div className="text-sm text-gray-500">
-                    Export as a JSON file for data interchange
-                  </div>
-                </div>
-              </Label>
-            </div>
-          </RadioGroup>
+          <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-600">
+            <p>
+              Der Export enthält alle Parameter und Attribute des morphologischen Kastens
+              {includeCompatibility && ", Kompatibilitätsdaten"}
+              {includeSolutions && " und erstellte Lösungen"}.
+            </p>
+          </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Abbrechen
           </Button>
-          <Button onClick={handleExport}>Export</Button>
+          <Button onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportieren
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

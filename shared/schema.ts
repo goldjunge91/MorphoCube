@@ -17,35 +17,28 @@ import { relations } from "drizzle-orm";
 export type CompatibilityLevel = -2 | -1 | 0 | 1 | 2; // -2: Impossible, -1: Difficult, 0: Neutral, 1: Good, 2: Excellent
 
 export interface AttributeCompatibility {
-  attribute1Id: number;
-  attribute2Id: number;
+  attribute1Id: string;
+  attribute2Id: string;
   level: CompatibilityLevel;
   reason?: string;
 }
 
 export interface CombinationConstraint {
-  id: number;
-  attributeId: number;
-  requiredAttributeIds?: number[];
-  excludedAttributeIds?: number[];
+  id: string;
+  attributeId: string;
+  requiredAttributeIds?: string[];
+  excludedAttributeIds?: string[];
   minScore?: number;
   maxScore?: number;
 }
 
 export interface TRIZPrinciple {
-  id: number;
+  id: string;
   name: string;
   description: string;
-  applicableToAttributeIds: number[];
+  applicableToAttributeIds: string[];
 }
 
-export interface CombinationScore {
-  technicalScore: number;
-  innovationScore: number;
-  compatibilityScore: number;
-  trizScore: number;
-  constraintsSatisfied: boolean;
-}
 // --- End of moved types ---
 
 // Tenant (Kunde) Tabelle
@@ -125,7 +118,7 @@ export const insertUserSchema = createInsertSchema(users, {
 
 // Parameter model
 export const parameters = pgTable("parameters", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   color: text("color").notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
@@ -146,9 +139,9 @@ export const insertParameterSchema = createInsertSchema(parameters).pick({
 
 // Attribute model
 export const attributes = pgTable("attributes", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
-  parameterId: integer("parameter_id")
+  parameterId: uuid("parameter_id")
     .notNull()
     .references(() => parameters.id, { onDelete: "cascade" }),
 });
@@ -160,7 +153,7 @@ export const insertAttributeSchema = createInsertSchema(attributes).pick({
 
 // Morphological Box model
 export const morphBoxes = pgTable("morph_boxes", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
@@ -194,8 +187,8 @@ export const insertMorphBoxSchema = createInsertSchema(morphBoxes).pick({
 
 // Shared Access model
 export const sharedAccess = pgTable("shared_access", {
-  id: serial("id").primaryKey(),
-  morphBoxId: integer("morph_box_id").references(() => morphBoxes.id, { onDelete: "cascade" }).notNull(),
+  id: uuid("id").defaultRandom().primaryKey(),
+  morphBoxId: uuid("morph_box_id").references(() => morphBoxes.id, { onDelete: "cascade" }).notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   canEdit: boolean("can_edit").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

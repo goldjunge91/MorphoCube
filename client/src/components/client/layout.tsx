@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import Sidebar from "./sidebar";
+import AdminSidebar from "./AdminSidebar";
 import MobileHeader from "./mobile-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,10 @@ export default function Layout({ children, title }: LayoutProps) {
     return <>{children}</>;
   }
 
+  // Bestimmen, ob wir die Admin-Sidebar oder die reguläre Sidebar verwenden sollen
+  const ShouldUseAdminSidebar = user.isSuperAdmin || user.isTenantAdmin;
+  const SidebarComponent = ShouldUseAdminSidebar ? AdminSidebar : Sidebar;
+
   // Function to determine the current page title
   const getPageTitle = () => {
     if (title) return title;
@@ -33,15 +38,23 @@ export default function Layout({ children, title }: LayoutProps) {
       case "/":
         return "Dashboard";
       case "/my-boxes":
-        return "My Morphological Boxes";
+        return "Meine Morphological Boxen";
       case "/templates":
-        return "Templates";
+        return "Vorlagen";
       case "/shared":
-        return "Shared with me";
+        return "Mit mir geteilt";
+      // Tenant Admin Routes
+      case "/tenant/users":
+        return "Tenant Benutzerverwaltung";
+      case "/tenant/settings":
+        return "Tenant Einstellungen";
+      // Super Admin Routes
+      case "/admin/tenants":
+        return "Tenants Verwaltung";
       case "/admin/users":
-        return "User Management";
+        return "Globale Benutzerverwaltung";
       case "/admin/settings":
-        return "Settings";
+        return "System Einstellungen";
       default:
         return "Morphological Box";
     }
@@ -49,7 +62,7 @@ export default function Layout({ children, title }: LayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar mobileOpen={mobileMenuOpen} setMobileOpen={setMobileMenuOpen} />
+      <SidebarComponent mobileOpen={mobileMenuOpen} setMobileOpen={setMobileMenuOpen} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}

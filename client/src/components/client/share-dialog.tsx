@@ -19,12 +19,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2, Users } from "lucide-react";
-import { User } from "@shared/schema";
+
+// Wir definieren einen eigenen Benutzertyp, um Konflikte zu vermeiden
+interface MorphoUser {
+  id: string;
+  username: string;
+}
 
 interface ShareDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onShare: (userId: number, canEdit: boolean) => void;
+  onShare: (userId: string, canEdit: boolean) => void;
 }
 
 export default function ShareDialog({
@@ -32,10 +37,10 @@ export default function ShareDialog({
   onOpenChange,
   onShare,
 }: ShareDialogProps) {
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState(false);
 
-  const { data: users, isLoading } = useQuery<User[]>({
+  const { data: users, isLoading } = useQuery<MorphoUser[]>({
     queryKey: ["/api/users"],
     enabled: open,
   });
@@ -53,36 +58,36 @@ export default function ShareDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Share Morphological Box</DialogTitle>
+          <DialogTitle>Morphologischen Kasten teilen</DialogTitle>
           <DialogDescription>
-            Share your morphological box with other users
+            Teilen Sie Ihren morphologischen Kasten mit anderen Benutzern
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="user">Select user to share with</Label>
+            <Label htmlFor="user">Benutzer zum Teilen auswählen</Label>
             {isLoading ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Loading users...</span>
+                <span>Benutzer werden geladen...</span>
               </div>
             ) : !users || users.length === 0 ? (
               <div className="text-center p-4 border rounded-md bg-gray-50">
                 <Users className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-500">No users available to share with</p>
+                <p className="text-gray-500">Keine Benutzer zum Teilen verfügbar</p>
               </div>
             ) : (
               <Select
-                value={selectedUserId?.toString() || ""}
-                onValueChange={(value) => setSelectedUserId(Number(value))}
+                value={selectedUserId || ""}
+                onValueChange={(value) => setSelectedUserId(value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a user" />
+                  <SelectValue placeholder="Benutzer auswählen" />
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
+                    <SelectItem key={user.id} value={user.id}>
                       {user.username}
                     </SelectItem>
                   ))}
@@ -97,23 +102,23 @@ export default function ShareDialog({
               checked={canEdit}
               onCheckedChange={(checked) => setCanEdit(checked as boolean)}
             />
-            <Label htmlFor="edit-permission">Allow editing</Label>
+            <Label htmlFor="edit-permission">Bearbeitung erlauben</Label>
           </div>
 
           <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-600">
             <p>
-              Users you share with will be able to view your morphological box.
-              If you enable editing, they will also be able to make changes to it.
+              Benutzer, mit denen Sie teilen, können Ihren morphologischen Kasten ansehen.
+              Wenn Sie die Bearbeitung aktivieren, können sie auch Änderungen vornehmen.
             </p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Abbrechen
           </Button>
           <Button onClick={handleShare} disabled={!selectedUserId}>
-            Share
+            Teilen
           </Button>
         </DialogFooter>
       </DialogContent>
