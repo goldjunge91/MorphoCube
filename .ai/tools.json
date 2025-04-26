@@ -1,0 +1,410 @@
+[
+    {
+        "name": "BashCommand",
+        "description": "Execute a bash command. This is stateful (beware with subsequent calls). - Status of the command and the current working directory will always be returned at the end. - The first or the last line might be `(...truncated)` if the output is too long. - Always run `pwd` if you get any file or directory not found error to make sure you're not lost. - Run long running commands in background using screen instead of \"&\". - Do not use 'cat' to read files, use ReadFiles tool instead - In order to check status of previous command, use `status_check` with empty command argument. - Only command is allowed to run at a time. You need to wait for any previous command to finish before running a new one. - Programs don't hang easily, so most likely explanation for no output is usually that the program is still running, and you need to check status again. - Do not send Ctrl-c before checking for status till 10 minutes or whatever is appropriate for the program to finish.",
+        "server": "wcgw",
+        "number": 1
+    },
+    {
+        "name": "brave_local_search",
+        "description": "Searches for local businesses and places using Brave's Local Search API. Best for queries related to physical locations, businesses, restaurants, services, etc. Returns detailed information including: - Business names and addresses - Ratings and review counts - Phone numbers and opening hours Use this when the query implies 'near me' or mentions specific locations. Automatically falls back to web search if no local results are found.",
+        "server": "brave-search",
+        "number": 2
+    },
+    {
+        "name": "brave_web_search",
+        "description": "Performs a web search using the Brave Search API, ideal for general queries, news, articles, and online content. Use this for broad information gathering, recent events, or when you need diverse web sources. Supports pagination, content filtering, and freshness controls. Maximum 20 results per request, with offset for pagination.",
+        "server": "brave-search",
+        "number": 3
+    },
+    {
+        "name": "ContextSave",
+        "description": "Saves provided description and file contents of all the relevant file paths or globs in a single text file. - Provide random unqiue id or whatever user provided. - Leave project path as empty string if no project path",
+        "server": "wcgw",
+        "number": 4
+    },
+    {
+        "name": "create_directory",
+        "description": "Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. If the directory already exists, this operation will succeed silently. Perfect for setting up directory structures for projects or ensuring required paths exist. Only works within allowed directories.",
+        "server": "filesystem",
+        "number": 5
+    },
+    {
+        "name": "directory_tree",
+        "description": "Get a recursive tree view of files and directories as a JSON structure. Each entry includes 'name', 'type' (file/directory), and 'children' for directories. Files have no children array, while directories always have a children array (which may be empty). The output is formatted with 2-space indentation for readability. Only works within allowed directories.",
+        "server": "filesystem",
+        "number": 6
+    },
+    {
+        "name": "edit_file",
+        "description": "Make line-based edits to a text file. Each edit replaces exact line sequences with new content. Returns a git-style diff showing the changes made. Only works within allowed directories.",
+        "server": "filesystem",
+        "number": 7
+    },
+    {
+        "name": "fetch",
+        "description": "Fetches a URL from the internet and optionally extracts its contents as markdown. Although originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.",
+        "server": "fetch",
+        "number": 8
+    },
+    {
+        "name": "file_system_read_directory",
+        "description": "List contents of a directory using an absolute path.",
+        "server": "repomix",
+        "number": 9
+    },
+    {
+        "name": "file_system_read_file",
+        "description": "Read a file using an absolute path with security validation.",
+        "server": "repomix",
+        "number": 10
+    },
+    {
+        "name": "FileWriteOrEdit",
+        "description": "- Writes or edits a file based on the percentage of changes. - Use absolute path only (~ allowed). - percentage_to_change is calculated as number of existing lines that will have some diff divided by total existing lines. - First write down percentage of lines that need to be replaced in the file (between 0-100) in percentage_to_change - percentage_to_change should be low if mostly new code is to be added. It should be high if a lot of things are to be replaced. - If percentage_to_change > 50, provide full file content in file_content_or_search_replace_blocks - If percentage_to_change <= 50, file_content_or_search_replace_blocks should be search/replace blocks. Instructions for editing files. # Example ## Input file ``` import numpy as np from impls import impl1, impl2 def hello(): \"print a greeting\" print(\"hello\") def call_hello(): \"call hello\" hello() print(\"Called\") impl1() hello() impl2() ``` ## Edit format on the input file ``` <<<<<<< SEARCH from impls import impl1, impl2 ======= from impls import impl1, impl2 from hello import hello as hello_renamed >>>>>>> REPLACE <<<<<<< SEARCH def hello(): \"print a greeting\" print(\"hello\") ======= >>>>>>> REPLACE <<<<<<< SEARCH def call_hello(): \"call hello\" hello() ======= def call_hello_renamed(): \"call hello renamed\" hello_renamed() >>>>>>> REPLACE <<<<<<< SEARCH impl1() hello() impl2() ======= impl1() hello_renamed() impl2() >>>>>>> REPLACE ``` # *SEARCH/REPLACE block* Rules: Every \"<<<<<<< SEARCH\" section must *EXACTLY MATCH* the existing file content, character for character, including all comments, docstrings, whitespaces, etc. Including multiple unique *SEARCH/REPLACE* blocks if needed. Include enough and only enough lines in each SEARCH section to uniquely match each set of lines that need to change. Keep *SEARCH/REPLACE* blocks concise. Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each change a small portion of the file. Include just the changing lines, and a few surrounding lines (2-3 lines) if needed for uniqueness. Other than for uniqueness, avoid including those lines which do not change in search (and replace) blocks. Target 2-3 non trivial extra lines per block. Preserve leading spaces and indentations in both SEARCH and REPLACE blocks.",
+        "server": "wcgw",
+        "number": 11
+    },
+    {
+        "name": "generate",
+        "description": "Generates text using the Gemini model based on the provided prompt and optional parameters like temperature and maxTokens.",
+        "server": "gemini",
+        "number": 12
+    },
+    {
+        "name": "get_context",
+        "description": "Retrieve context by ID and optional project ID",
+        "server": "claude-server",
+        "number": 13
+    },
+    {
+        "name": "get_file_info",
+        "description": "Retrieve detailed metadata about a file or directory. Returns comprehensive information including size, creation time, last modified time, permissions, and type. This tool is perfect for understanding file characteristics without reading the actual content. Only works within allowed directories.",
+        "server": "filesystem",
+        "number": 14
+    },
+    {
+        "name": "git_add",
+        "description": "Adds file contents to the staging area",
+        "server": "git",
+        "number": 15
+    },
+    {
+        "name": "git_checkout",
+        "description": "Switches branches",
+        "server": "git",
+        "number": 16
+    },
+    {
+        "name": "git_commit",
+        "description": "Records changes to the repository",
+        "server": "git",
+        "number": 17
+    },
+    {
+        "name": "git_create_branch",
+        "description": "Creates a new branch from an optional base branch",
+        "server": "git",
+        "number": 18
+    },
+    {
+        "name": "git_diff",
+        "description": "Shows differences between branches or commits",
+        "server": "git",
+        "number": 19
+    },
+    {
+        "name": "git_diff_staged",
+        "description": "Shows changes that are staged for commit",
+        "server": "git",
+        "number": 20
+    },
+    {
+        "name": "git_diff_unstaged",
+        "description": "Shows changes in the working directory that are not yet staged",
+        "server": "git",
+        "number": 21
+    },
+    {
+        "name": "git_log",
+        "description": "Shows the commit logs",
+        "server": "git",
+        "number": 22
+    },
+    {
+        "name": "git_reset",
+        "description": "Unstages all staged changes",
+        "server": "git",
+        "number": 23
+    },
+    {
+        "name": "git_show",
+        "description": "Shows the contents of a commit",
+        "server": "git",
+        "number": 24
+    },
+    {
+        "name": "git_status",
+        "description": "Shows the working tree status",
+        "server": "git",
+        "number": 25
+    },
+    {
+        "name": "Initialize",
+        "description": "- Always call this at the start of the conversation before using any of the shell tools from wcgw. - Use `any_workspace_path` to initialize the shell in the appropriate project directory. - If the user has mentioned a workspace or project root or any other file or folder use it to set `any_workspace_path`. - If user has mentioned any files use `initial_files_to_read` to read, use absolute paths only (~ allowed) - By default use mode \"wcgw\" - In \"code-writer\" mode, set the commands and globs which user asked to set, otherwise use 'all'. - Use type=\"first_call\" if it's the first call to this tool. - Use type=\"user_asked_mode_change\" if in a conversation user has asked to change mode. - Use type=\"reset_shell\" if in a conversation shell is not working after multiple tries. - Use type=\"user_asked_change_workspace\" if in a conversation user asked to change workspace",
+        "server": "wcgw",
+        "number": 26
+    },
+    {
+        "name": "list_allowed_directories",
+        "description": "Returns the list of directories that this server is allowed to access. Use this to understand which directories are available before trying to access files.",
+        "server": "filesystem",
+        "number": 27
+    },
+    {
+        "name": "list_contexts",
+        "description": "List contexts with filtering options",
+        "server": "claude-server",
+        "number": 28
+    },
+    {
+        "name": "list_directory",
+        "description": "Get a detailed listing of all files and directories in a specified path. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is essential for understanding directory structure and finding specific files within a directory. Only works within allowed directories.",
+        "server": "filesystem",
+        "number": 29
+    },
+    {
+        "name": "move_file",
+        "description": "Move or rename files and directories. Can move files between directories and rename them in a single operation. If the destination exists, the operation will fail. Works across different directories and can be used for simple renaming within the same directory. Both source and destination must be within allowed directories.",
+        "server": "filesystem",
+        "number": 30
+    },
+    {
+        "name": "pack_codebase",
+        "description": "Package local code directory into a consolidated file for AI analysis",
+        "server": "repomix",
+        "number": 31
+    },
+    {
+        "name": "pack_remote_repository",
+        "description": "Fetch, clone and package a GitHub repository into a consolidated file for AI analysis",
+        "server": "repomix",
+        "number": 32
+    },
+    {
+        "name": "pocket_add",
+        "description": "Add a new item to your pocket pick database",
+        "server": "claude-pocket-pick",
+        "number": 33
+    },
+    {
+        "name": "pocket_add_file",
+        "description": "Add a new item to your pocket pick database from a file",
+        "server": "claude-pocket-pick",
+        "number": 34
+    },
+    {
+        "name": "pocket_backup",
+        "description": "Backup your pocket pick database to a specified location",
+        "server": "claude-pocket-pick",
+        "number": 35
+    },
+    {
+        "name": "pocket_find",
+        "description": "Find items in your pocket pick database by text and tags",
+        "server": "claude-pocket-pick",
+        "number": 36
+    },
+    {
+        "name": "pocket_get",
+        "description": "Get an item from your pocket pick database by ID",
+        "server": "claude-pocket-pick",
+        "number": 37
+    },
+    {
+        "name": "pocket_list",
+        "description": "List items in your pocket pick database, optionally filtered by tags",
+        "server": "claude-pocket-pick",
+        "number": 38
+    },
+    {
+        "name": "pocket_list_tags",
+        "description": "List all tags in your pocket pick database with their counts",
+        "server": "claude-pocket-pick",
+        "number": 39
+    },
+    {
+        "name": "pocket_remove",
+        "description": "Remove an item from your pocket pick database by ID",
+        "server": "claude-pocket-pick",
+        "number": 40
+    },
+    {
+        "name": "pocket_to_file_by_id",
+        "description": "Write a pocket pick item's content to a file by its ID (requires absolute file path)",
+        "server": "claude-pocket-pick",
+        "number": 41
+    },
+    {
+        "name": "read_file",
+        "description": "Read the complete contents of a file from the file system. Handles various text encodings and provides detailed error messages if the file cannot be read. Use this tool when you need to examine the contents of a single file. Only works within allowed directories.",
+        "server": "filesystem",
+        "number": 42
+    },
+    {
+        "name": "read_multiple_files",
+        "description": "Read the contents of multiple files simultaneously. This is more efficient than reading files one by one when you need to analyze or compare multiple files. Each file's content is returned with its path as a reference. Failed reads for individual files won't stop the entire operation. Only works within allowed directories.",
+        "server": "filesystem",
+        "number": 43
+    },
+    {
+        "name": "read_repomix_output",
+        "description": "Read the contents of a Repomix output file in environments where direct file access is not possible. This tool is specifically intended for cases where the client cannot access the file system directly, such as in web-based environments or sandboxed applications. For systems with direct file access, use standard file operations instead.",
+        "server": "repomix",
+        "number": 44
+    },
+    {
+        "name": "ReadFiles",
+        "description": "- Read full file content of one or more files. - Provide absolute paths only (~ allowed) - Only if the task requires line numbers understanding: - You may populate 'show_line_numbers_reason' with your reason, by default null/empty means no line numbers are shown. - You may extract a range of lines. E.g., `/path/to/file:1-10` for lines 1-10. You can drop start or end like `/path/to/file:1-` or `/path/to/file:-10",
+        "server": "wcgw",
+        "number": 45
+    },
+    {
+        "name": "BashCommand",
+        "description": "Execute a bash command. This is stateful (beware with subsequent calls). - Status of the command and the current working directory will always be returned at the end. - The first or the last line might be `(...truncated)` if the output is too long. - Always run `pwd` if you get any file or directory not found error to make sure you're not lost. - Run long running commands in background using screen instead of \"&\". - Do not use 'cat' to read files, use ReadFiles tool instead - In order to check status of previous command, use `status_check` with empty command argument. - Only command is allowed to run at a time. You need to wait for any previous command to finish before running a new one. - Programs don't hang easily, so most likely explanation for no output is usually that the program is still running, and you need to check status again. - Do not send Ctrl-c before checking for status till 10 minutes or whatever is appropriate for the program to finish.",
+        "server": "wcgw",
+        "number": 1
+    },
+    {
+        "name": "ReadFiles",
+        "description": "- Read full file content of one or more files. - Provide absolute paths only (~ allowed) - Only if the task requires line numbers understanding: - You may populate 'show_line_numbers_reason' with your reason, by default null/empty means no line numbers are shown. - You may extract a range of lines. E.g., `/path/to/file:1-10` for lines 1-10. You can drop start or end like `/path/to/file:1-` or `/path/to/file:-10",
+        "server": "wcgw",
+        "number": 45
+    },
+    {
+        "name": "ReadImage",
+        "description": "Read an image from the shell.",
+        "server": "wcgw",
+        "number": 46
+    },
+    {
+        "name": "save_conversation_context",
+        "description": "Save conversation context with continuation support",
+        "server": "claude-server",
+        "number": 47
+    },
+    {
+        "name": "save_project_context",
+        "description": "Save project-specific context with relationships",
+        "server": "claude-server",
+        "number": 48
+    },
+    {
+        "name": "search_files",
+        "description": "Recursively search for files and directories matching a pattern. Searches through all subdirectories from the starting path. The search is case-insensitive and matches partial names. Returns full paths to all matching items. Great for finding files when you don't know their exact location. Only searches within allowed directories.",
+        "server": "filesystem",
+        "number": 49
+    },
+    {
+        "name": "sequentialthinking",
+        "description": "A detailed tool for dynamic and reflective problem-solving through thoughts. This tool helps analyze problems through a flexible thinking process that can adapt and evolve. Each thought can build on, question, or revise previous insights as understanding deepens. When to use this tool: - Breaking down complex problems into steps - Planning and design with room for revision - Analysis that might need course correction - Problems where the full scope might not be clear initially - Problems that require a multi-step solution - Tasks that need to maintain context over multiple steps - Situations where irrelevant information needs to be filtered out Key features: - You can adjust total_thoughts up or down as you progress - You can question or revise previous thoughts - You can add more thoughts even after reaching what seemed like the end - You can express uncertainty and explore alternative approaches - Not every thought needs to build linearly - you can branch or backtrack - Generates a solution hypothesis - Verifies the hypothesis based on the Chain of Thought steps - Repeats the process until satisfied - Provides a correct answer Parameters explained: - thought: Your current thinking step, which can include: * Regular analytical steps * Revisions of previous thoughts * Questions about previous decisions * Realizations about needing more analysis * Changes in approach * Hypothesis generation * Hypothesis verification - next_thought_needed: True if you need more thinking, even if at what seemed like the end - thought_number: Current number in sequence (can go beyond initial total if needed) - total_thoughts: Current estimate of thoughts needed (can be adjusted up/down) - is_revision: A boolean indicating if this thought revises previous thinking - revises_thought: If is_revision is true, which thought number is being reconsidered - branch_from_thought: If branching, which thought number is the branching point - branch_id: Identifier for the current branch (if any) - needs_more_thoughts: If reaching end but realizing more thoughts needed You should: 1. Start with an initial estimate of needed thoughts, but be ready to adjust 2. Feel free to question or revise previous thoughts 3. Don't hesitate to add more thoughts if needed, even at the \"end\" 4. Express uncertainty when present 5. Mark thoughts that revise previous thinking or branch into new paths 6. Ignore information that is irrelevant to the current step 7. Generate a solution hypothesis when appropriate 8. Verify the hypothesis based on the Chain of Thought steps 9. Repeat the process until satisfied with the solution 10. Provide a single, ideally correct answer as the final output 11. Only set next_thought_needed to false when truly done and a satisfactory answer is reached",
+        "server": "sequential-thinking",
+        "number": 50
+    },
+    {
+        "name": "sequentialthinking_tools",
+        "description": "A detailed tool for dynamic and reflective problem-solving through thoughts. This tool helps analyze problems through a flexible thinking process that can adapt and evolve. Each thought can build on, question, or revise previous insights as understanding deepens. IMPORTANT: When initializing this tool, you must pass all available tools that you want the sequential thinking process to be able to use. The tool will analyze these tools and provide recommendations for their use. When to use this tool: - Breaking down complex problems into steps - Planning and design with room for revision - Analysis that might need course correction - Problems where the full scope might not be clear initially - Problems that require a multi-step solution - Tasks that need to maintain context over multiple steps - Situations where irrelevant information needs to be filtered out - When you need guidance on which tools to use and in what order Key features: - You can adjust total_thoughts up or down as you progress - You can question or revise previous thoughts - You can add more thoughts even after reaching what seemed like the end - You can express uncertainty and explore alternative approaches - Not every thought needs to build linearly - you can branch or backtrack - Generates a solution hypothesis - Verifies the hypothesis based on the Chain of Thought steps - Recommends appropriate tools for each step - Provides rationale for tool recommendations - Suggests tool execution order and parameters - Tracks previous recommendations and remaining steps Parameters explained: - thought: Your current thinking step, which can include: * Regular analytical steps * Revisions of previous thoughts * Questions about previous decisions * Realizations about needing more analysis * Changes in approach * Hypothesis generation * Hypothesis verification * Tool recommendations and rationale - next_thought_needed: True if you need more thinking, even if at what seemed like the end - thought_number: Current number in sequence (can go beyond initial total if needed) - total_thoughts: Current estimate of thoughts needed (can be adjusted up/down) - is_revision: A boolean indicating if this thought revises previous thinking - revises_thought: If is_revision is true, which thought number is being reconsidered - branch_from_thought: If branching, which thought number is the branching point - branch_id: Identifier for the current branch (if any) - needs_more_thoughts: If reaching end but realizing more thoughts needed - current_step: Current step recommendation, including: * step_description: What needs to be done * recommended_tools: Tools recommended for this step * expected_outcome: What to expect from this step * next_step_conditions: Conditions to consider for the next step - previous_steps: Steps already recommended - remaining_steps: High-level descriptions of upcoming steps You should: 1. Start with an initial estimate of needed thoughts, but be ready to adjust 2. Feel free to question or revise previous thoughts 3. Don't hesitate to add more thoughts if needed, even at the \"end\" 4. Express uncertainty when present 5. Mark thoughts that revise previous thinking or branch into new paths 6. Ignore information that is irrelevant to the current step 7. Generate a solution hypothesis when appropriate 8. Verify the hypothesis based on the Chain of Thought steps 9. Consider available tools that could help with the current step 10. Provide clear rationale for tool recommendations 11. Suggest specific tool parameters when appropriate 12. Consider alternative tools for each step 13. Track progress through the recommended steps 14. Provide a single, ideally correct answer as the final output 15. Only set next_thought_needed to false when truly done and a satisfactory answer is reached",
+        "server": "mcp-sequentialthinking-tools",
+        "number": 51
+    },
+    {
+        "name": "vibe_check",
+        "description": "Metacognitive questioning tool that identifies assumptions and breaks tunnel vision to prevent cascading errors",
+        "server": "vibe-check",
+        "number": 52
+    },
+    {
+        "name": "vibe_distill",
+        "description": "Plan simplification tool that reduces complexity and extracts essential elements to prevent over-engineering",
+        "server": "vibe-check",
+        "number": 53
+    },
+    {
+        "name": "vibe_learn",
+        "description": "Pattern recognition system that tracks common errors and solutions to prevent recurring issues",
+        "server": "vibe-check",
+        "number": 54
+    },
+    {
+        "name": "write_file",
+        "description": "Create a new file or completely overwrite an existing file with new content. Use with caution as it will overwrite existing files without warning. Handles text content with proper encoding. Only works within allowed directories.",
+        "server": "filesystem",
+        "number": 55
+    },
+    {
+        "name": "browser_click",
+        "description": "Perform click on a web page",
+        "server": "browsermcp",
+        "number": 56
+    },
+    {
+        "name": "browser_get_console_logs",
+        "description": "Get the console logs from the browser",
+        "server": "browsermcp",
+        "number": 57
+    },
+    {
+        "name": "browser_go_back",
+        "description": "Go back to the previous page",
+        "server": "browsermcp",
+        "number": 58
+    },
+    {
+        "name": "browser_go_forward",
+        "description": "Go forward to the next page",
+        "server": "browsermcp",
+        "number": 59
+    },
+    {
+        "name": "browser_hover",
+        "description": "Hover over element on page",
+        "server": "browsermcp",
+        "number": 60
+    },
+    {
+        "name": "browser_navigate",
+        "description": "Navigate to a URL",
+        "server": "browsermcp",
+        "number": 61
+    },
+    {
+        "name": "browser_press_key",
+        "description": "Press a key on the keyboard",
+        "server": "browsermcp",
+        "number": 62
+    },
+    {
+        "name": "browser_select_option",
+        "description": "Select an option in a dropdown",
+        "server": "browsermcp",
+        "number": 63
+    },
+    {
+        "name": "browser_snapshot",
+        "description": "Capture accessibility snapshot of the current page, this is better than screenshot",
+        "server": "browsermcp",
+        "number": 64
+    },
+    {
+        "name": "browser_type",
+        "description": "Type text into editable element",
+        "server": "browsermcp",
+        "number": 65
+    },
+    {
+        "name": "browser_wait",
+        "description": "Wait for a specified time in seconds",
+        "server": "browsermcp",
+        "number": 66
+    }
+]

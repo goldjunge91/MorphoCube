@@ -1,0 +1,9 @@
+{
+    "generate-comments": {
+        "prompt": "erstelle für am anfang eine kurze tsdoc beschreibung. danach erstelle für jede zeile informative hilfreiche kommentare. Belasse den code wie er ist, er darf nicht berührt werden es darf nur neue zeilen zwischen den code erstellt werden",
+        "context": {
+            "selection": true
+        },
+        "mode": "edit"
+    }
+}

@@ -4,5 +4,27 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"github.copilot.chat.testGeneration.instructions": [
+			{
+				"text": "Use Vitest & Playwright for testing Typescript React components. Do not use any mocks if possible. Use the actual component for testing. Do not use any mocks if possible."
+			},
+			// {
+			// 	"file": ".github/copilot-instructions.md"
+			// }
+		],
+		"github.copilot.chat.commitMessageGeneration.instructions": [
+			{
+				"file": ".copilot-commit-message-instructions.md"
+			}
+		],
+		"github.copilot.chat.codeGeneration.instructions": [
+			{
+				"text": "Never use placeholder or Dummy data, only the USER explicitly says to use it."
+			},
+			{
+				"file": ".github/copilot-instructions.md" // import instructions from file `.github/copilot-instructions.md`
+			}
+		],
+	}
 }
