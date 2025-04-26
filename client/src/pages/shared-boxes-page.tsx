@@ -29,7 +29,7 @@ export default function SharedBoxesPage() {
         enabled: !!user, // Only fetch if user is logged in
     });
 
-    const handleOpenBox = (boxId: number) => {
+    const handleOpenBox = (boxId: string) => {
         // Navigate to the box editor/viewer page
         // Assuming the editor page handles shared boxes correctly
         navigate(`/my-boxes?id=${boxId}`);

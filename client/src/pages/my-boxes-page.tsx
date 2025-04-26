@@ -52,38 +52,38 @@ import {
 import { MorphBox } from "@shared/schema";
 
 export default function MyBoxesPage() {
-  const [searchLocation, navigate] = useLocation();
+  const [search_location, navigate] = useLocation();
   const { toast } = useToast();
   const { user, isLoading } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [editingBox, setEditingBox] = useState<MorphBox | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [boxToDelete, setBoxToDelete] = useState<MorphBox | null>(null);
+  const [active_tab, setActiveTab] = useState("all");
+  const [search_term, setSearchTerm] = useState("");
+  const [editing_box, setEditingBox] = useState<MorphBox | null>(null);
+  const [is_creating, setIsCreating] = useState(false);
+  const [delete_dialog_open, setDeleteDialogOpen] = useState(false);
+  const [box_to_delete, setBoxToDelete] = useState<MorphBox | null>(null);
 
   // Parse URL parameters for editing or creating a box
   useEffect(() => {
-    const params = new URLSearchParams(searchLocation.split('?')[1]);
-    const boxId = params.get('id');
-    const createParam = params.get('create');
+    const params = new URLSearchParams(search_location.split('?')[1] || "");
+    const box_id = params.get('id');
+    const create_param = params.get('create');
 
-    if (boxId) {
+    if (box_id && !isNaN(Number(box_id))) {
       // Fetch the specific box and set it for editing
-      fetchBoxById(parseInt(boxId));
-    } else if (createParam === 'true') {
+      FetchBoxById(Number(box_id));
+    } else if (create_param === 'true') {
       setIsCreating(true);
     }
-  }, [searchLocation]);
+  }, [search_location]);
 
   // Fetch all boxes
-  const { data: morphBoxes, isLoading: isBoxesLoading } = useQuery<MorphBox[]>({
+  const { data: morph_boxes, isLoading: is_boxes_loading } = useQuery<MorphBox[]>({
     queryKey: ["/api/morphboxes"],
   });
 
   // Fetch specific box by ID
-  const fetchBoxById = async (id: number) => {
+  const FetchBoxById = async (id: number) => {
     try {
       const response = await fetch(`/api/morphboxes/${id}`, {
         credentials: "include",
@@ -105,7 +105,7 @@ export default function MyBoxesPage() {
   };
 
   // Delete box mutation
-  const deleteBoxMutation = useMutation({
+  const delete_box_mutation = useMutation({
     mutationFn: async (boxId: number) => {
       await apiRequest("DELETE", `/api/morphboxes/${boxId}`);
       return boxId;
@@ -129,81 +129,81 @@ export default function MyBoxesPage() {
     },
   });
 
-  const handleCreateNewBox = () => {
+  const HandleCreateNewBox = () => {
     setEditingBox(null);
     setIsCreating(true);
     navigate("/my-boxes?create=true");
   };
 
-  const handleEditBox = (box: MorphBox) => {
+  const HandleEditBox = (box: MorphBox) => {
     setEditingBox(box);
     setIsCreating(false);
     navigate(`/my-boxes?id=${box.id}`);
   };
 
-  const handleDeleteBox = (box: MorphBox) => {
+  const HandleDeleteBox = (box: MorphBox) => {
     setBoxToDelete(box);
     setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteBox = () => {
-    if (boxToDelete) {
-      deleteBoxMutation.mutate(boxToDelete.id);
+  const ConfirmDeleteBox = () => {
+    if (box_to_delete) {
+      delete_box_mutation.mutate(Number(box_to_delete.id));
     }
   };
 
-  const handleCloseEditor = () => {
+  const HandleCloseEditor = () => {
     setEditingBox(null);
     setIsCreating(false);
     navigate("/my-boxes");
   };
 
-  const handleBoxSaved = () => {
+  const HandleBoxSaved = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/morphboxes"] });
   };
 
   // Filter boxes based on search term and active tab
-  const filteredBoxes = morphBoxes
-    ? morphBoxes
+  const filtered_boxes = morph_boxes
+    ? morph_boxes
       .filter(box =>
-        searchTerm
-          ? box.title.toLowerCase().includes(searchTerm.toLowerCase())
+        search_term
+          ? box.title.toLowerCase().includes(search_term.toLowerCase())
           : true
       )
       .filter(box => {
-        if (activeTab === "all") return true;
-        if (activeTab === "recent") {
+        if (active_tab === "all") return true;
+        if (active_tab === "recent") {
           // Consider boxes from the last 7 days as recent
-          const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-          return new Date(box.updatedAt) >= sevenDaysAgo;
+          const seven_days_ago = new Date();
+          seven_days_ago.setDate(seven_days_ago.getDate() - 7);
+          return new Date(box.updatedAt) >= seven_days_ago;
         }
         return false;
       })
     : [];
 
   // If editing or creating a box, show the morph box creator
-  if (editingBox || isCreating) {
+  if (editing_box || is_creating) {
     return (
-      <Layout title={editingBox ? `Editing: ${editingBox.title}` : "Create New Box"}>
+      <Layout title={editing_box ? `Editing: ${editing_box.title}` : "Create New Box"}>
         <div className="mb-4 flex items-center">
-          <Button variant="outline" onClick={handleCloseEditor}>
+          <Button variant="outline" onClick={HandleCloseEditor}>
             &larr; Back to My Boxes
           </Button>
         </div>
 
         <MorphBoxCreator
-          morphBoxId={editingBox?.id}
-          initialTitle={editingBox?.title || "New Morphological Box"}
-          initialDescription={editingBox?.description || ""}
-          onSaved={handleBoxSaved}
+          morphBoxId={editing_box ? Number(editing_box.id) : undefined}
+          initialTitle={editing_box?.title || "New Morphological Box"}
+          initialDescription={editing_box?.description || ""}
+          onSaved={HandleBoxSaved}
         />
       </Layout>
     );
   }
 
   // Format the last saved time to a readable format
-  const formatLastSaved = (timestamp?: string) => {
+  const FormatLastSaved = (timestamp?: string) => {
     if (!timestamp) return "Never";
 
     const date = new Date(timestamp);
@@ -234,12 +234,12 @@ export default function MyBoxesPage() {
             <div className="relative flex-1 sm:flex-initial">
               <Input
                 placeholder="Search boxes..."
-                value={searchTerm}
+                value={search_term}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              {searchTerm && (
+              {search_term && (
                 <button
                   onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -248,42 +248,42 @@ export default function MyBoxesPage() {
                 </button>
               )}
             </div>
-            <Button onClick={handleCreateNewBox}>
+            <Button onClick={HandleCreateNewBox}>
               <Plus className="h-4 w-4 mr-2" />
               New Box
             </Button>
           </div>
         </div>
 
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue="all" value={active_tab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="all">All Boxes</TabsTrigger>
             <TabsTrigger value="recent">Recent</TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="mt-6">
-            {isBoxesLoading ? (
+            {is_boxes_loading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : !filteredBoxes.length ? (
+            ) : !filtered_boxes.length ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                 <div className="mx-auto w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mb-4">
                   <Box className="h-6 w-6 text-gray-500" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {searchTerm ? "No Results Found" : "No Morphological Boxes"}
+                  {search_term ? "No Results Found" : "No Morphological Boxes"}
                 </h3>
                 <p className="text-gray-500 max-w-md mx-auto mb-4">
-                  {searchTerm
+                  {search_term
                     ? "No boxes match your search. Try with different keywords."
                     : "You haven't created any morphological boxes yet. Create your first box to get started."}
                 </p>
-                {searchTerm ? (
+                {search_term ? (
                   <Button variant="outline" onClick={() => setSearchTerm("")}>
                     Clear Search
                   </Button>
                 ) : (
-                  <Button onClick={handleCreateNewBox}>
+                  <Button onClick={HandleCreateNewBox}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create New Box
                   </Button>
@@ -291,7 +291,7 @@ export default function MyBoxesPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredBoxes.map((box) => (
+                {filtered_boxes.map((box) => (
                   <Card key={box.id} className="hover:shadow-md transition-shadow">
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -304,7 +304,7 @@ export default function MyBoxesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEditBox(box)}>
+                            <DropdownMenuItem onClick={() => HandleEditBox(box)}>
                               <Pencil className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
@@ -322,7 +322,7 @@ export default function MyBoxesPage() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleDeleteBox(box)}
+                              onClick={() => HandleDeleteBox(box)}
                               className="text-destructive focus:text-destructive"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
@@ -335,7 +335,7 @@ export default function MyBoxesPage() {
                         <div className="flex items-center text-gray-500 mt-1">
                           <Clock className="h-3 w-3 mr-1" />
                           <span className="text-xs">
-                            Last edited: {formatLastSaved(box.updatedAt.toString())}
+                            Last edited: {FormatLastSaved(box.updatedAt.toString())}
                           </span>
                         </div>
                       </CardDescription>
@@ -349,14 +349,14 @@ export default function MyBoxesPage() {
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => handleEditBox(box)}
+                        onClick={() => HandleEditBox(box)}
                       >
                         Open
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDeleteBox(box)}
+                        onClick={() => HandleDeleteBox(box)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
@@ -374,19 +374,19 @@ export default function MyBoxesPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={delete_dialog_open} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Morphological Box</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{boxToDelete?.title}"? This action cannot be undone
+              Are you sure you want to delete "{box_to_delete?.title}"? This action cannot be undone
               and all data associated with this box will be permanently lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDeleteBox}
+              onClick={ConfirmDeleteBox}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

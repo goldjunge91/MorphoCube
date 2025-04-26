@@ -183,6 +183,153 @@ Durch systematische Kombination dieser Elemente können umfassende Lösungsräum
 - PostgreSQL (v14 oder höher)
 - pnpm als Paketmanager
 
+### Projektstruktur
+
+MorphoCube folgt einer modularen, erweiterbaren Architektur mit klarer Trennung der Verantwortlichkeiten:
+
+#### Client-Struktur
+
+```
+client/
+├── src/
+│   ├── app/                      # App-Router Struktur
+│   │   ├── (auth)/               # Authentifizierungsbereich
+│   │   │   ├── login/            # Login-Seite
+│   │   │   ├── register/         # Registrierung
+│   │   │   └── layout.tsx        # Auth-Layout
+│   │   ├── (dashboard)/          # Dashboard-Bereich
+│   │   │   ├── layout.tsx        # Dashboard-Layout
+│   │   │   ├── page.tsx          # Homepage
+│   │   │   ├── my-boxes/         # Meine Kästen
+│   │   │   ├── shared/           # Geteilte Kästen
+│   │   │   └── templates/        # Vorlagen
+│   │   ├── (admin)/              # Admin-Bereich
+│   │   │   ├── users/            # Benutzerverwaltung
+│   │   │   ├── tenants/          # Tenant-Verwaltung
+│   │   │   └── settings/         # Einstellungen
+│   │   └── layout.tsx            # Root-Layout
+│   ├── components/               # Wiederverwendbare Komponenten
+│   │   ├── ui/                   # UI-Basiskomponenten (shadcn)
+│   │   ├── layout/               # Layout-Komponenten
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── header.tsx
+│   │   │   └── ...
+│   │   ├── morph-box/            # Morphkasten-spezifische Komponenten
+│   │   │   ├── editor/           # Editor-Komponenten
+│   │   │   ├── viewer/           # Anzeige-Komponenten
+│   │   │   ├── parameters/       # Parameter-bezogene Komponenten
+│   │   │   ├── attributes/       # Attribut-bezogene Komponenten
+│   │   │   ├── solutions/        # Lösungs-bezogene Komponenten
+│   │   │   └── compatibility/    # Komponenten für Kompatibilitätsmatrix
+│   │   ├── forms/                # Formular-Komponenten
+│   │   └── data-display/         # Datenanzeigekomponenten
+│   ├── hooks/                    # React Hooks
+│   │   ├── use-auth.tsx
+│   │   ├── use-morph-box.tsx     # Hook für Morphkasten-Operationen
+│   │   ├── use-parameters.tsx    # Hook für Parameter-Management
+│   │   └── ...
+│   ├── services/                 # API-Services
+│   │   ├── api.ts                # Basis-API-Client
+│   │   ├── auth-service.ts       # Auth-Service
+│   │   ├── morph-box-service.ts  # Morphkasten-Service
+│   │   ├── tenant-service.ts     # Tenant-Service
+│   │   └── ...
+│   ├── stores/                   # Zustandsmanagement
+│   │   ├── auth-store.ts         # Auth-Zustand
+│   │   ├── morph-box-store.ts    # Morphkasten-Zustand
+│   │   └── ...
+│   ├── utils/                    # Hilfsfunktionen
+│   │   ├── date-utils.ts
+│   │   ├── format-utils.ts
+│   │   ├── validation-utils.ts
+│   │   └── ...
+│   ├── constants/                # Konstanten und Konfigurationen
+│   ├── styles/                   # Globale Stile
+│   ├── types/                    # Client-spezifische Typen
+│   ├── App.tsx
+│   └── main.tsx
+```
+
+#### Server-Struktur
+
+```
+server/
+├── controllers/                  # API-Controller
+│   ├── auth-controller.ts        # Auth-Controller
+│   ├── morph-box-controller.ts   # Morphkasten-Controller
+│   ├── parameter-controller.ts   # Parameter-Controller
+│   ├── attribute-controller.ts   # Attribut-Controller
+│   ├── tenant-controller.ts      # Tenant-Controller
+│   ├── user-controller.ts        # Benutzer-Controller
+│   └── ...
+├── middlewares/                  # Express-Middlewares
+│   ├── auth-middleware.ts        # Auth-Middleware
+│   ├── error-middleware.ts       # Fehlerbehandlung
+│   ├── validation-middleware.ts  # Validierungsmiddleware
+│   └── ...
+├── routes/                       # API-Routen
+│   ├── auth-routes.ts            # Auth-Routen
+│   ├── morph-box-routes.ts       # Morphkasten-Routen
+│   ├── parameter-routes.ts       # Parameter-Routen
+│   ├── attribute-routes.ts       # Attribut-Routen
+│   ├── tenant-routes.ts          # Tenant-Routen
+│   ├── user-routes.ts            # Benutzer-Routen
+│   └── ...
+├── services/                     # Geschäftslogik
+│   ├── auth-service.ts           # Auth-Service
+│   ├── morph-box-service.ts      # Morphkasten-Service
+│   ├── parameter-service.ts      # Parameter-Service
+│   ├── attribute-service.ts      # Attribut-Service
+│   ├── tenant-service.ts         # Tenant-Service
+│   ├── user-service.ts           # Benutzer-Service
+│   └── ...
+├── data/                         # Datenzugriff
+│   ├── repositories/             # Repositories für Datenbankzugriff
+│   │   ├── morph-box-repository.ts
+│   │   ├── parameter-repository.ts
+│   │   ├── attribute-repository.ts
+│   │   └── ...
+│   └── database.ts               # Datenbankverbindung
+├── utils/                        # Server-Hilfsfunktionen
+├── config/                       # Server-Konfiguration
+├── validators/                   # Validierungsschemata
+│   ├── morph-box-validator.ts
+│   ├── parameter-validator.ts
+│   ├── attribute-validator.ts
+│   ├── user-validator.ts
+│   └── ...
+└── index.ts                      # Server-Entry-Point
+```
+
+#### Shared-Struktur
+
+```
+shared/
+├── schemas/                      # Datenbankschemas
+│   ├── morph-box-schema.ts       # Morphkasten-Schema
+│   ├── parameter-schema.ts       # Parameter-Schema
+│   ├── attribute-schema.ts       # Attribut-Schema
+│   ├── tenant-schema.ts          # Tenant-Schema
+│   ├── user-schema.ts            # Benutzer-Schema
+│   └── ...
+├── types/                        # Gemeinsam genutzte Typendefinitionen
+│   ├── morph-box-types.ts        # Morphkasten-Typen
+│   ├── parameter-types.ts        # Parameter-Typen
+│   ├── attribute-types.ts        # Attribut-Typen
+│   ├── tenant-types.ts           # Tenant-Typen
+│   ├── user-types.ts             # Benutzer-Typen
+│   └── ...
+├── constants/                    # Gemeinsam genutzte Konstanten
+├── validations/                  # Zod-Validierungsschemata
+│   ├── morph-box-zod-schema.ts   # Morphkasten-Validierung
+│   ├── parameter-zod-schema.ts   # Parameter-Validierung
+│   ├── attribute-zod-schema.ts   # Attribut-Validierung
+│   ├── tenant-zod-schema.ts      # Tenant-Validierung
+│   ├── user-zod-schema.ts        # Benutzer-Validierung
+│   └── ...
+└── utils/                        # Gemeinsam genutzte Hilfsfunktionen
+```
+
 ### Entwicklungsserver starten
 ```bash
 # Installation der Abhängigkeiten

@@ -27,12 +27,12 @@ export default function MorphBoxCreator({
   const { toast } = useToast();
 
   const [title, setTitle] = useState(initialTitle);
-  const [lastSaved, setLastSaved] = useState<string | undefined>(undefined);
-  const [isSaved, setIsSaved] = useState(false);
+  const [last_saved, setLastSaved] = useState<string | undefined>(undefined);
+  const [is_saved, setIsSaved] = useState(false);
   const [collaborators, setCollaborators] = useState<{ id: number; username: string; }[]>([]);
 
   // Create or update a morphological box
-  const morphBoxMutation = useMutation({
+  const morph_box_mutation = useMutation({
     mutationFn: async (data: {
       title: string;
       content: any;
@@ -41,7 +41,7 @@ export default function MorphBoxCreator({
     }) => {
       if (!user) throw new Error("User not authenticated");
 
-      const morphBoxData: InsertMorphBox = {
+      const morph_box_data: InsertMorphBox = {
         title: data.title,
         description: data.description || "",
         userId: user.id,
@@ -54,7 +54,7 @@ export default function MorphBoxCreator({
         const res = await apiRequest(
           "PATCH",
           `/api/morphboxes/${morphBoxId}`,
-          morphBoxData
+          morph_box_data
         );
         return res.json();
       } else {
@@ -62,7 +62,7 @@ export default function MorphBoxCreator({
         const res = await apiRequest(
           "POST",
           "/api/morphboxes",
-          morphBoxData
+          morph_box_data
         );
         return res.json();
       }
@@ -98,7 +98,7 @@ export default function MorphBoxCreator({
   });
 
   // Share a morphological box with another user
-  const shareMutation = useMutation({
+  const share_mutation = useMutation({
     mutationFn: async ({
       userId,
       canEdit,
@@ -132,13 +132,13 @@ export default function MorphBoxCreator({
     },
   });
 
-  const handleTitleChange = (newTitle: string) => {
+  const HandleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
     setIsSaved(false);
   };
 
-  const handleSave = (content: any) => {
-    morphBoxMutation.mutate({
+  const HandleSave = (content: any) => {
+    morph_box_mutation.mutate({
       title,
       content,
       description: initialDescription,
@@ -146,11 +146,11 @@ export default function MorphBoxCreator({
     });
   };
 
-  const handleShare = (userId: number, canEdit: boolean) => {
-    shareMutation.mutate({ userId, canEdit });
+  const HandleShare = (userId: number, canEdit: boolean) => {
+    share_mutation.mutate({ userId, canEdit });
   };
 
-  const handleExport = (format: string) => {
+  const HandleExport = (format: string) => {
     toast({
       title: "Export initiated",
       description: `Exporting as ${format.toUpperCase()}...`,
@@ -165,11 +165,27 @@ export default function MorphBoxCreator({
     }, 1500);
   };
 
-  const isLoading = morphBoxMutation.isPending || shareMutation.isPending;
+  // Wrap the functions to match the expected signatures in MorphBoxToolbar
+  const HandleShareWrapper = () => {
+    // Diese Funktion sollte in einer echten Anwendung einen Dialog öffnen
+    // oder anderweitig die Benutzer-ID und canEdit-Berechtigung erfassen
+    const MOCK_USER_ID = 1;
+    const MOCK_CAN_EDIT = true;
+    HandleShare(MOCK_USER_ID, MOCK_CAN_EDIT);
+  };
+
+  const HandleExportWrapper = () => {
+    // Diese Funktion sollte in einer echten Anwendung einen Dialog öffnen
+    // oder anderweitig das Format erfassen
+    const MOCK_FORMAT = "pdf";
+    HandleExport(MOCK_FORMAT);
+  };
+
+  const is_loading = morph_box_mutation.isPending || share_mutation.isPending;
 
   return (
     <DragAndDropProvider>
-      {isLoading && (
+      {is_loading && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg flex items-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -180,13 +196,13 @@ export default function MorphBoxCreator({
 
       <MorphBoxToolbar
         title={title}
-        onTitleChange={handleTitleChange}
-        lastSaved={lastSaved}
-        isSaved={isSaved}
+        onTitleChange={HandleTitleChange}
+        lastSaved={last_saved}
+        isSaved={is_saved}
         collaborators={collaborators}
-        onSave={() => handleSave({ savedAt: new Date().toISOString() })}
-        onExport={handleExport}
-        onShare={handleShare}
+        onSave={() => HandleSave({ savedAt: new Date().toISOString() })}
+        onExport={HandleExportWrapper}
+        onShare={HandleShareWrapper}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -195,8 +211,8 @@ export default function MorphBoxCreator({
         </div>
         <div className="lg:col-span-2">
           <MorphologicalBox
-            morphBoxId={morphBoxId}
-            onSave={handleSave}
+            boxId={morphBoxId?.toString()}
+            onSave={HandleSave}
           />
         </div>
       </div>

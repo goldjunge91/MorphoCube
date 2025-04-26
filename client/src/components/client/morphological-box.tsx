@@ -30,22 +30,27 @@ interface MorphologicalBoxProps {
   boxId?: string;
   isTemplate?: boolean;
   isReadOnly?: boolean;
+  onSave?: (content: any) => void;
 }
 
 export default function MorphologicalBoxComponent({
   boxId,
   isTemplate = false,
   isReadOnly = false,
+  onSave,
 }: MorphologicalBoxProps) {
   const { toast } = useToast();
-  const [activeBox, setActiveBox] = useState<MorphologicalBox | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("editor");
-  const [isCreateParameterOpen, setIsCreateParameterOpen] = useState(false);
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [isCombinationDialogOpen, setIsCombinationDialogOpen] = useState(false);
-  const [selectedSolution, setSelectedSolution] = useState<Solution | null>(null);
+  const [active_box, setActiveBox] = useState<MorphologicalBox | null>(null);
+  const [active_tab, setActiveTab] = useState<string>("editor");
+  const [is_create_parameter_open, setIsCreateParameterOpen] = useState(false);
+  const [is_share_dialog_open, setIsShareDialogOpen] = useState(false);
+  const [is_export_dialog_open, setIsExportDialogOpen] = useState(false);
+  const [is_combination_dialog_open, setIsCombinationDialogOpen] = useState(false);
+  const [selected_solution, setSelectedSolution] = useState<Solution | null>(null);
   const [solutions, setSolutions] = useState<Solution[]>([]);
+  const [box_title, setBoxTitle] = useState<string>("Morphologischer Kasten");
+  const [last_saved, setLastSaved] = useState<string | undefined>(undefined);
+  const [is_saved, setIsSaved] = useState(false);
 
   // Beispiel-Query für den Morphologischen Kasten
   const { data: boxData, isLoading } = useQuery({
@@ -166,10 +171,10 @@ export default function MorphologicalBoxComponent({
       return newParameter;
     },
     onSuccess: (newParameter) => {
-      if (activeBox) {
+      if (active_box) {
         setActiveBox({
-          ...activeBox,
-          parameters: [...activeBox.parameters, newParameter],
+          ...active_box,
+          parameters: [...active_box.parameters, newParameter],
         });
         toast({
           title: "Parameter erstellt",
@@ -190,6 +195,7 @@ export default function MorphologicalBoxComponent({
   useEffect(() => {
     if (boxData) {
       setActiveBox(boxData);
+      setBoxTitle(boxData.name);
     }
   }, [boxData]);
 
@@ -197,16 +203,16 @@ export default function MorphologicalBoxComponent({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!active || !over || active.id === over.id || !activeBox) return;
+    if (!active || !over || active.id === over.id || !active_box) return;
 
     // Handle Parameter reordering
     if (typeof active.id === 'string' && typeof over.id === 'string' &&
       active.id.startsWith('p') && over.id.startsWith('p')) {
-      const oldIndex = activeBox.parameters.findIndex(p => p.id === active.id);
-      const newIndex = activeBox.parameters.findIndex(p => p.id === over.id);
+      const oldIndex = active_box.parameters.findIndex(p => p.id === active.id);
+      const newIndex = active_box.parameters.findIndex(p => p.id === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        const newParameters = [...activeBox.parameters];
+        const newParameters = [...active_box.parameters];
         const [movedParameter] = newParameters.splice(oldIndex, 1);
         newParameters.splice(newIndex, 0, movedParameter);
 
@@ -217,7 +223,7 @@ export default function MorphologicalBoxComponent({
         }));
 
         setActiveBox({
-          ...activeBox,
+          ...active_box,
           parameters: updatedParameters,
         });
       }
@@ -231,10 +237,10 @@ export default function MorphologicalBoxComponent({
       const overParamId = (over.data?.current as any)?.parameterId;
 
       if (activeParamId && overParamId && activeParamId === overParamId) {
-        const paramIndex = activeBox.parameters.findIndex(p => p.id === activeParamId);
+        const paramIndex = active_box.parameters.findIndex(p => p.id === activeParamId);
 
         if (paramIndex !== -1) {
-          const attributes = [...activeBox.parameters[paramIndex].attributes];
+          const attributes = [...active_box.parameters[paramIndex].attributes];
           const oldIndex = attributes.findIndex(a => a.id === active.id);
           const newIndex = attributes.findIndex(a => a.id === over.id);
 
@@ -248,14 +254,14 @@ export default function MorphologicalBoxComponent({
               order: index,
             }));
 
-            const updatedParameters = [...activeBox.parameters];
+            const updatedParameters = [...active_box.parameters];
             updatedParameters[paramIndex] = {
               ...updatedParameters[paramIndex],
               attributes: updatedAttributes,
             };
 
             setActiveBox({
-              ...activeBox,
+              ...active_box,
               parameters: updatedParameters,
             });
           }
@@ -265,9 +271,15 @@ export default function MorphologicalBoxComponent({
   };
 
   // Speichern des aktuellen Stands
-  const handleSave = () => {
-    if (activeBox) {
-      saveMutation.mutate(activeBox);
+  const HandleSave = () => {
+    if (active_box) {
+      saveMutation.mutate(active_box);
+      setIsSaved(true);
+      setLastSaved(new Date().toISOString());
+
+      if (onSave) {
+        onSave(active_box);
+      }
     }
   };
 
@@ -276,7 +288,7 @@ export default function MorphologicalBoxComponent({
     createParameterMutation.mutate({
       ...parameterData,
       morphological_box_id: boxId || "",
-      order: activeBox?.parameters.length || 0,
+      order: active_box?.parameters.length || 0,
     });
   };
 
@@ -341,7 +353,7 @@ export default function MorphologicalBoxComponent({
     );
   }
 
-  if (!activeBox && !isLoading) {
+  if (!active_box && !isLoading) {
     return (
       <Alert>
         <AlertTitle>Kein morphologischer Kasten gefunden</AlertTitle>
@@ -354,28 +366,33 @@ export default function MorphologicalBoxComponent({
 
   return (
     <div className="container mx-auto p-4">
-      {activeBox && (
+      {active_box && (
         <>
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h1 className="text-2xl font-bold">{activeBox.name}</h1>
-                <p className="text-sm text-gray-500">{activeBox.description}</p>
+                <h1 className="text-2xl font-bold">{active_box.name}</h1>
+                <p className="text-sm text-gray-500">{active_box.description}</p>
               </div>
 
               <MorphBoxToolbar
-                onSave={handleSave}
+                onSave={HandleSave}
                 onAddParameter={() => setIsCreateParameterOpen(true)}
                 onShare={() => setIsShareDialogOpen(true)}
                 onExport={() => setIsExportDialogOpen(true)}
                 onCreateSolution={() => setIsCombinationDialogOpen(true)}
                 isReadOnly={isReadOnly}
                 isSaving={saveMutation.isPending}
+                title={box_title}
+                onTitleChange={setBoxTitle}
+                lastSaved={last_saved}
+                isSaved={is_saved}
+                collaborators={[]}
               />
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={active_tab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="mb-4">
               <TabsTrigger value="editor">Editor</TabsTrigger>
               <TabsTrigger value="solutions">Lösungen</TabsTrigger>
@@ -384,26 +401,26 @@ export default function MorphologicalBoxComponent({
 
             <TabsContent value="editor" className="space-y-4">
               <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={activeBox.parameters.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                <SortableContext items={active_box.parameters.map(p => p.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-4">
-                    {activeBox.parameters.map((parameter) => (
+                    {active_box.parameters.map((parameter) => (
                       <ParameterCard
                         key={parameter.id}
                         parameter={parameter}
                         isReadOnly={isReadOnly}
                         onUpdate={(updatedParameter: MorphoParameter) => {
-                          const updatedParameters = activeBox.parameters.map(p =>
+                          const updatedParameters = active_box.parameters.map(p =>
                             p.id === updatedParameter.id ? updatedParameter : p
                           );
                           setActiveBox({
-                            ...activeBox,
+                            ...active_box,
                             parameters: updatedParameters,
                           });
                         }}
                         onDelete={(parameterId: string) => {
-                          const updatedParameters = activeBox.parameters.filter(p => p.id !== parameterId);
+                          const updatedParameters = active_box.parameters.filter(p => p.id !== parameterId);
                           setActiveBox({
-                            ...activeBox,
+                            ...active_box,
                             parameters: updatedParameters,
                           });
                           toast({
@@ -417,7 +434,7 @@ export default function MorphologicalBoxComponent({
                 </SortableContext>
               </DndContext>
 
-              {activeBox.parameters.length === 0 && (
+              {active_box.parameters.length === 0 && (
                 <Card>
                   <CardContent className="pt-6 text-center">
                     <p className="text-gray-500 mb-4">Noch keine Parameter vorhanden.</p>
@@ -440,7 +457,7 @@ export default function MorphologicalBoxComponent({
                   {solutions.length > 0 ? (
                     <div className="space-y-4">
                       {solutions.map(solution => (
-                        <Card key={solution.id} className={`cursor-pointer transition-all ${selectedSolution?.id === solution.id ? 'ring-2 ring-primary' : 'hover:bg-gray-50'}`} onClick={() => setSelectedSolution(solution)}>
+                        <Card key={solution.id} className={`cursor-pointer transition-all ${selected_solution?.id === solution.id ? 'ring-2 ring-primary' : 'hover:bg-gray-50'}`} onClick={() => setSelectedSolution(solution)}>
                           <CardContent className="p-4">
                             <h3 className="font-medium">{solution.name}</h3>
                             <p className="text-sm text-gray-500">{solution.description}</p>
@@ -450,7 +467,7 @@ export default function MorphologicalBoxComponent({
                                 let attribute: MorphoAttribute | undefined;
                                 let parameter: MorphoParameter | undefined;
 
-                                for (const p of activeBox.parameters) {
+                                for (const p of active_box.parameters) {
                                   const a = p.attributes.find(a => a.id === attrId);
                                   if (a) {
                                     attribute = a;
@@ -485,7 +502,7 @@ export default function MorphologicalBoxComponent({
                 </CardContent>
               </Card>
 
-              {selectedSolution && (
+              {selected_solution && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Lösungsdetails</CardTitle>
@@ -494,19 +511,19 @@ export default function MorphologicalBoxComponent({
                     <div className="space-y-4">
                       <div>
                         <h3 className="font-semibold">Name</h3>
-                        <p>{selectedSolution.name}</p>
+                        <p>{selected_solution.name}</p>
                       </div>
 
                       <div>
                         <h3 className="font-semibold">Beschreibung</h3>
-                        <p>{selectedSolution.description || "Keine Beschreibung verfügbar."}</p>
+                        <p>{selected_solution.description || "Keine Beschreibung verfügbar."}</p>
                       </div>
 
                       <div>
                         <h3 className="font-semibold">Ausgewählte Attribute</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                          {activeBox.parameters.map(parameter => {
-                            const selectedAttrId = selectedSolution.selected_attribute_ids.find(attrId =>
+                          {active_box.parameters.map(parameter => {
+                            const selectedAttrId = selected_solution.selected_attribute_ids.find(attrId =>
                               parameter.attributes.some(a => a.id === attrId)
                             );
 
@@ -528,48 +545,48 @@ export default function MorphologicalBoxComponent({
                         </div>
                       </div>
 
-                      {(selectedSolution.total_score !== undefined ||
-                        selectedSolution.feasibility_score !== undefined ||
-                        selectedSolution.cost_score !== undefined ||
-                        selectedSolution.innovation_score !== undefined) && (
+                      {(selected_solution.total_score !== undefined ||
+                        selected_solution.feasibility_score !== undefined ||
+                        selected_solution.cost_score !== undefined ||
+                        selected_solution.innovation_score !== undefined) && (
                           <div>
                             <h3 className="font-semibold">Bewertungen</h3>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
-                              {selectedSolution.total_score !== undefined && (
+                              {selected_solution.total_score !== undefined && (
                                 <div className="p-2 border rounded-md">
                                   <h4 className="text-sm text-gray-500">Gesamtwertung</h4>
-                                  <p className="font-bold">{selectedSolution.total_score}</p>
+                                  <p className="font-bold">{selected_solution.total_score}</p>
                                 </div>
                               )}
 
-                              {selectedSolution.feasibility_score !== undefined && (
+                              {selected_solution.feasibility_score !== undefined && (
                                 <div className="p-2 border rounded-md">
                                   <h4 className="text-sm text-gray-500">Technische Machbarkeit</h4>
-                                  <p className="font-bold">{selectedSolution.feasibility_score}</p>
+                                  <p className="font-bold">{selected_solution.feasibility_score}</p>
                                 </div>
                               )}
 
-                              {selectedSolution.cost_score !== undefined && (
+                              {selected_solution.cost_score !== undefined && (
                                 <div className="p-2 border rounded-md">
                                   <h4 className="text-sm text-gray-500">Kosten</h4>
-                                  <p className="font-bold">{selectedSolution.cost_score}</p>
+                                  <p className="font-bold">{selected_solution.cost_score}</p>
                                 </div>
                               )}
 
-                              {selectedSolution.innovation_score !== undefined && (
+                              {selected_solution.innovation_score !== undefined && (
                                 <div className="p-2 border rounded-md">
                                   <h4 className="text-sm text-gray-500">Innovation</h4>
-                                  <p className="font-bold">{selectedSolution.innovation_score}</p>
+                                  <p className="font-bold">{selected_solution.innovation_score}</p>
                                 </div>
                               )}
                             </div>
                           </div>
                         )}
 
-                      {selectedSolution.notes && (
+                      {selected_solution.notes && (
                         <div>
                           <h3 className="font-semibold">Notizen</h3>
-                          <p className="mt-1">{selectedSolution.notes}</p>
+                          <p className="mt-1">{selected_solution.notes}</p>
                         </div>
                       )}
                     </div>
@@ -580,7 +597,7 @@ export default function MorphologicalBoxComponent({
 
             <TabsContent value="compatibility">
               <CompatibilityMatrix
-                morphologicalBox={activeBox}
+                morphologicalBox={active_box}
                 isReadOnly={isReadOnly}
                 onUpdateCompatibility={handleUpdateCompatibility}
               />
@@ -591,27 +608,27 @@ export default function MorphologicalBoxComponent({
 
       {/* Dialoge */}
       <CreateParameterDialog
-        open={isCreateParameterOpen}
+        open={is_create_parameter_open}
         onOpenChange={setIsCreateParameterOpen}
         onCreateParameter={handleCreateParameter}
       />
 
       <ShareDialog
-        open={isShareDialogOpen}
+        open={is_share_dialog_open}
         onOpenChange={setIsShareDialogOpen}
         onShare={handleShare}
       />
 
       <ExportDialog
-        open={isExportDialogOpen}
+        open={is_export_dialog_open}
         onOpenChange={setIsExportDialogOpen}
         onExport={handleExport}
       />
 
       <CombinationDialog
-        open={isCombinationDialogOpen}
+        open={is_combination_dialog_open}
         onOpenChange={setIsCombinationDialogOpen}
-        morphologicalBox={activeBox}
+        morphologicalBox={active_box}
         onCreateSolution={handleCreateSolution}
       />
     </div>
