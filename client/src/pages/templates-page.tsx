@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import Layout from "@/components/layout";
+import Layout from "@/components/client/layout";
 import {
   Card,
   CardContent,
@@ -108,12 +108,12 @@ export default function TemplatesPage() {
 
   const handleUseTemplate = (templateId: number) => {
     setIsLoading(true);
-    
+
     // Simulate loading time
     setTimeout(() => {
       setIsLoading(false);
       navigate(`/my-boxes?create=true&template=${templateId}`);
-      
+
       toast({
         title: "Template loaded",
         description: "Template has been loaded. You can now customize it.",
@@ -125,11 +125,11 @@ export default function TemplatesPage() {
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = searchTerm
       ? template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        template.description.toLowerCase().includes(searchTerm.toLowerCase())
+      template.description.toLowerCase().includes(searchTerm.toLowerCase())
       : true;
-      
+
     const matchesCategory = activeCategory === "all" || template.category === activeCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -148,7 +148,7 @@ export default function TemplatesPage() {
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               {searchTerm && (
-                <button 
+                <button
                   onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
@@ -172,7 +172,7 @@ export default function TemplatesPage() {
               </TabsTrigger>
             ))}
           </TabsList>
-          
+
           <TabsContent value={activeCategory} className="mt-6">
             {isLoading ? (
               <div className="flex justify-center py-12">
@@ -225,7 +225,7 @@ export default function TemplatesPage() {
                       </p>
                     </CardContent>
                     <CardFooter className="flex justify-between">
-                      <Button 
+                      <Button
                         onClick={() => handleUseTemplate(template.id)}
                         disabled={isLoading}
                       >

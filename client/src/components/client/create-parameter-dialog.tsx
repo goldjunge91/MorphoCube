@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X, Plus } from "lucide-react";
 import { Parameter, InsertParameter } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 
 interface CreateParameterDialogProps {
@@ -43,7 +43,7 @@ export default function CreateParameterDialog({
   editingParameter,
 }: CreateParameterDialogProps) {
   const [attributes, setAttributes] = useState<string[]>(["", ""]);
-  const { toast } = useToast()
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -90,7 +90,7 @@ export default function CreateParameterDialog({
         },
         validAttributes
       );
-      
+
       // Reset form and close dialog only after successful submission
       form.reset();
       setAttributes(["", ""]);
@@ -154,11 +154,10 @@ export default function CreateParameterDialog({
                       <button
                         key={color.name}
                         type="button"
-                        className={`w-8 h-8 rounded-full ${color.bg} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${color.name}-500 ${
-                          field.value === color.name
-                            ? `ring-2 ring-offset-2 ring-${color.name}-500`
-                            : ""
-                        }`}
+                        className={`w-8 h-8 rounded-full ${color.bg} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${color.name}-500 ${field.value === color.name
+                          ? `ring-2 ring-offset-2 ring-${color.name}-500`
+                          : ""
+                          }`}
                         onClick={() => form.setValue("color", color.name)}
                       />
                     ))}

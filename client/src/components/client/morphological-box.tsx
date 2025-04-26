@@ -30,15 +30,15 @@ import {
 import AttributeTag from "./attribute-tag";
 import CombinationDialog from "./combination-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 interface MorphologicalBoxProps {
   morphBoxId?: number;
   onSave: (content: any) => void;
 }
 
 // Define the BoxParameter type inline
-type BoxParameter = Parameter & { 
-  attributes: Attribute[]; 
+type BoxParameter = Parameter & {
+  attributes: Attribute[];
   weight?: number; // Engineering importance weight (1-10)
 };
 
@@ -47,7 +47,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
   const [boxParameters, setBoxParameters] = useState<BoxParameter[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [parameterToDelete, setParameterToDelete] = useState<number | null>(null);
-  const [attributeToDelete, setAttributeToDelete] = useState<{ parameterId: number, attributeId: number } | null>(null);
+  const [attributeToDelete, setAttributeToDelete] = useState<{ parameterId: number, attributeId: number; } | null>(null);
   const [viewMode, setViewMode] = useState<"compact" | "groups">("compact");
   const [combinationsDialogOpen, setCombinationsDialogOpen] = useState(false);
 
@@ -64,7 +64,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
 
   // Add attribute mutation
   const addAttributeMutation = useMutation({
-    mutationFn: async ({ parameterId, name }: { parameterId: number, name: string }) => {
+    mutationFn: async ({ parameterId, name }: { parameterId: number, name: string; }) => {
       const attributeData: InsertAttribute = {
         name,
         parameterId
@@ -78,7 +78,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
         title: "Attribute added",
         description: "Attribute was successfully added.",
       });
-      
+
       // Update local state too for immediate feedback
       setBoxParameters(prev => {
         return prev.map(param => {
@@ -112,7 +112,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
         title: "Attribute deleted",
         description: "Attribute was successfully deleted.",
       });
-      
+
       // Update local state
       if (attributeToDelete) {
         setBoxParameters(prev => {
@@ -154,10 +154,10 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
   useEffect(() => {
     if (morphBox && morphBox.content) {
       try {
-        const content = typeof morphBox.content === 'string' 
+        const content = typeof morphBox.content === 'string'
           ? JSON.parse(morphBox.content)
           : morphBox.content;
-          
+
         if (content.parameters) {
           setBoxParameters(content.parameters);
         }
@@ -231,7 +231,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
       setBoxParameters(prev => prev.filter(p => p.id !== parameterToDelete));
       setParameterToDelete(null);
       setDeleteDialogOpen(false);
-      
+
       toast({
         title: "Parameter removed",
         description: "Parameter was removed from your morphological box.",
@@ -259,31 +259,31 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
     ) {
       return;
     }
-    
+
     const newIndex = direction === "up" ? index - 1 : index + 1;
     const newParameters = [...boxParameters];
     const [movedItem] = newParameters.splice(index, 1);
     newParameters.splice(newIndex, 0, movedItem);
-    
+
     setBoxParameters(newParameters);
   };
-  
+
   const handleUpdateParameterWeight = (parameterId: number) => {
     // Get current weight
     const parameter = boxParameters.find(p => p.id === parameterId);
     if (!parameter) return;
-    
+
     const currentWeight = parameter.weight || 5;
     // Cycle through weights: 5 -> 7 -> 10 -> 3 -> 5
-    const newWeight = currentWeight === 5 ? 7 : 
-                      currentWeight === 7 ? 10 : 
-                      currentWeight === 10 ? 3 : 5;
-    
+    const newWeight = currentWeight === 5 ? 7 :
+      currentWeight === 7 ? 10 :
+        currentWeight === 10 ? 3 : 5;
+
     // Update parameter weight
-    setBoxParameters(prev => prev.map(p => 
+    setBoxParameters(prev => prev.map(p =>
       p.id === parameterId ? { ...p, weight: newWeight } : p
     ));
-    
+
     toast({
       title: "Parameter importance updated",
       description: `${parameter.name} importance set to ${newWeight}/10`,
@@ -320,26 +320,26 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
     // Generate a sample of combinations (limited to avoid performance issues)
     const sampleSize = Math.min(totalCombinations, 100);
     const sampleCombinations = [];
-    
+
     // Generate sample combinations
     for (let i = 0; i < sampleSize; i++) {
       const combination: Record<string, string> = {};
-      
+
       boxParameters.forEach(param => {
         if (param.attributes.length > 0) {
           // The higher the importance, the more likely this parameter's attributes will impact the combination
           // We use the importance weight to bias random selection
-          
+
           // For engineering-important parameters (weight 7-10), we may try to select special attributes
           // For less important parameters (weight 1-3), we might skip or use defaults
           const importance = param.weight || 5;
-          
+
           if (importance >= 7) {
             // For high importance parameters, we might want to bias toward certain attributes
             // For demo purposes, we're still using random selection
             const attributeIdx = Math.floor(Math.random() * param.attributes.length);
             combination[param.name] = param.attributes[attributeIdx].name;
-          } 
+          }
           else if (importance <= 3 && Math.random() < 0.3) {
             // For low importance parameters, 30% chance to skip or use a default value
             // This makes combinations focus more on the important parameters
@@ -352,7 +352,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
           }
         }
       });
-      
+
       sampleCombinations.push(combination);
     }
 
@@ -367,7 +367,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
       title: "Combinations generated",
       description: `Total possible combinations: ${totalCombinations.toLocaleString()}. Sample of ${sampleSize} combinations created.`,
     });
-    
+
     // Open combinations dialog (to be implemented)
     setCombinationsDialogOpen(true);
   };
@@ -382,9 +382,8 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-white bg-opacity-20 hover:bg-opacity-30 rounded py-1 px-2 text-xs ${
-              viewMode === "compact" ? "bg-opacity-40" : ""
-            }`}
+            className={`bg-white bg-opacity-20 hover:bg-opacity-30 rounded py-1 px-2 text-xs ${viewMode === "compact" ? "bg-opacity-40" : ""
+              }`}
             onClick={() => setViewMode("compact")}
           >
             <Grid className="h-3 w-3 mr-1" />
@@ -393,9 +392,8 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-white bg-opacity-20 hover:bg-opacity-30 rounded py-1 px-2 text-xs ${
-              viewMode === "groups" ? "bg-opacity-40" : ""
-            }`}
+            className={`bg-white bg-opacity-20 hover:bg-opacity-30 rounded py-1 px-2 text-xs ${viewMode === "groups" ? "bg-opacity-40" : ""
+              }`}
             onClick={() => setViewMode("groups")}
           >
             <Layers className="h-3 w-3 mr-1" />
@@ -464,7 +462,7 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
                               >
                                 <GripVertical className="h-3 w-3 rotate-180" /> {/* Rotate for up */}
                               </Button>
-                               <Button
+                              <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 text-gray-400 hover:text-gray-600"
@@ -514,9 +512,8 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
                   <TableCell colSpan={2} className="py-4">
                     <div
                       ref={drop}
-                      className={`dropzone border-2 border-dashed rounded-lg p-4 text-center text-gray-500 transition-colors ${
-                        isOver ? "border-primary bg-primary/10" : "border-gray-300 hover:border-gray-400"
-                      }`}
+                      className={`dropzone border-2 border-dashed rounded-lg p-4 text-center text-gray-500 transition-colors ${isOver ? "border-primary bg-primary/10" : "border-gray-300 hover:border-gray-400"
+                        }`}
                       style={{ minHeight: '60px' }} // Ensure dropzone has some height
                     >
                       <p>Drag parameters here to add</p>
@@ -574,8 +571,8 @@ export default function MorphologicalBox({ morphBoxId, onSave }: MorphologicalBo
       </AlertDialog>
 
       {/* Combination Dialog */}
-      <CombinationDialog 
-        open={combinationsDialogOpen} 
+      <CombinationDialog
+        open={combinationsDialogOpen}
         onOpenChange={setCombinationsDialogOpen}
         parameters={boxParameters}
       />

@@ -21,7 +21,7 @@ interface MorphBoxToolbarProps {
   onTitleChange: (title: string) => void;
   lastSaved?: string;
   isSaved?: boolean;
-  collaborators?: { id: number; username: string }[];
+  collaborators?: { id: number; username: string; }[];
   onSave: () => void; // Changed prop type
   onExport: (format: string) => void;
   onShare: (userId: number, canEdit: boolean) => void;
@@ -51,7 +51,7 @@ export default function MorphBoxToolbar({
     setIsEditing(true);
   };
 
-  const handleSubmitTitle = (data: { title: string }) => {
+  const handleSubmitTitle = (data: { title: string; }) => {
     onTitleChange(data.title);
     setIsEditing(false);
   };

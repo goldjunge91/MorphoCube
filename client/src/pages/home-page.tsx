@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import Layout from "@/components/layout";
+import Layout from "@/components/client/layout";
 import {
   Card,
   CardContent,
@@ -20,71 +20,72 @@ import {
   Users,
   Settings,
 } from "lucide-react";
-import { MorphBox } from "@shared/schema";
+import { MorphBox, UserResponse } from "@shared/schema"; // Import UserResponse
+import { useAuth } from "@/hooks/use-auth"; // Import useAuth
 
 export default function HomePage() {
   const [, navigate] = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Mock data for development without authentication
-  const user = {
-    id: 1,
-    username: "User",
-    email: "user@example.com",
-    isAdmin: false
-  };
-  
-  const recentBoxes: MorphBox[] = [
-    {
-      id: 1,
-      title: "Product Development Strategy",
-      description: "Analyzing various product development approaches and methodologies",
-      userId: 1,
-      content: "{}",
-      isPublic: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 2,
-      title: "Market Entry Analysis",
-      description: "Evaluating different market entry strategies for our new product line",
-      userId: 1,
-      content: "{}",
-      isPublic: true,
-      createdAt: new Date(),
-      updatedAt: new Date(Date.now() - 86400000) // 1 day ago
-    }
-  ];
-  
-  const sharedBoxes: MorphBox[] = [];
+  const { user, isLoading: isAuthLoading } = useAuth(); // Get user from useAuth
+  const [isLoading, setIsLoading] = useState(false); // Keep local loading state if needed for box data
+
+  // Mock data for development without authentication (Remove or guard this)
+  // const mockUser = { ... };
+  // const recentBoxes: MorphBox[] = [ ... ];
+  // const sharedBoxes: MorphBox[] = [];
+
+  // TODO: Replace mock data with actual data fetching using react-query
+  // Example:
+  // const { data: recentBoxes, isLoading: isRecentLoading } = useQuery(...)
+  // const { data: sharedBoxes, isLoading: isSharedLoading } = useQuery(...)
+  // const isLoading = isAuthLoading || isRecentLoading || isSharedLoading;
+
+  // Use mock data only if user is not available (for development/testing)
+  const displayUser = user; // Use real user if available
+  const recentBoxes: MorphBox[] = user ? [] : [ /* mock data */]; // Replace with actual fetch
+  const sharedBoxes: MorphBox[] = user ? [] : [ /* mock data */]; // Replace with actual fetch
+
 
   const handleCreateNewBox = () => {
     navigate("/my-boxes?create=true");
   };
 
-  const handleOpenBox = (boxId: number) => {
+  const handleOpenBox = (boxId: number | string) => { // Allow string ID if needed
     navigate(`/my-boxes?id=${boxId}`);
   };
 
   // Format the last saved time to a readable format
-  const formatLastSaved = (timestamp?: string) => {
+  const formatLastSaved = (timestamp?: Date | string) => { // Accept Date or string
     if (!timestamp) return "Never";
-    
-    const lastSavedDate = new Date(timestamp);
+
+    const lastSavedDate = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
     const now = new Date();
     const diffMs = now.getTime() - lastSavedDate.getTime();
     const diffMins = Math.round(diffMs / 60000);
-    
+
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
-    
+
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
   };
+
+  // Loading state check
+  if (isAuthLoading) {
+    return <Layout title="Dashboard"><div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></Layout>;
+  }
+
+  // Handle case where user is null after loading (not logged in)
+  if (!displayUser) {
+    // Optional: Redirect to login or show a message
+    // navigate("/auth"); // Or return a message component
+    return <Layout title="Dashboard"><p>Please log in.</p></Layout>;
+  }
+
+  // Determine if the user has admin privileges (Tenant or Super)
+  const hasAdminPrivileges = displayUser.isTenantAdmin || displayUser.isSuperAdmin;
 
   return (
     <Layout title="Dashboard">
@@ -95,7 +96,7 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                  Welcome, {mockUser.username}!
+                  Welcome, {displayUser.username}!
                 </h1>
                 <p className="text-white/80 max-w-xl">
                   Create, analyze and manage your morphological boxes with our
@@ -129,7 +130,7 @@ export default function HomePage() {
                 {isLoading ? (
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 ) : (
-                  mockRecentBoxes?.length || 0
+                  recentBoxes?.length || 0 // Replace with actual data length
                 )}
               </p>
             </CardContent>
@@ -148,7 +149,7 @@ export default function HomePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{sharedBoxes?.length || 0}</p>
+              <p className="text-3xl font-bold">{sharedBoxes?.length || 0}</p> {/* Replace with actual data length */}
             </CardContent>
             <CardFooter>
               <Button variant="ghost" size="sm" onClick={() => navigate("/shared")}>
@@ -157,28 +158,34 @@ export default function HomePage() {
             </CardFooter>
           </Card>
 
-          {user?.isAdmin && (
+          {/* Conditional Admin Card */}
+          {hasAdminPrivileges && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
                   <Users className="mr-2 h-5 w-5 text-info" />
-                  User Management
+                  {/* Adjust title based on specific role if needed */}
+                  {displayUser.isSuperAdmin ? "Super Admin" : "Tenant Management"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-500">
-                  Manage user accounts and permissions
+                  {displayUser.isSuperAdmin
+                    ? "Manage tenants and global settings"
+                    : "Manage users within your tenant"}
                 </p>
               </CardContent>
               <CardFooter>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/admin/users")}>
-                  Manage Users
+                {/* Link to appropriate admin page */}
+                <Button variant="ghost" size="sm" onClick={() => navigate(displayUser.isSuperAdmin ? "/admin/tenants" : "/tenant/users")}>
+                  {displayUser.isSuperAdmin ? "Manage Tenants" : "Manage Users"}
                 </Button>
               </CardFooter>
             </Card>
           )}
 
-          {!user?.isAdmin && (
+          {/* Standard User Quick Settings Card */}
+          {!hasAdminPrivileges && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
@@ -192,7 +199,7 @@ export default function HomePage() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/profile/settings")}> {/* Adjust link */}
                   Open Settings
                 </Button>
               </CardFooter>
@@ -217,7 +224,7 @@ export default function HomePage() {
                       <div className="flex items-center text-gray-500 mt-1">
                         <Clock className="h-3 w-3 mr-1" />
                         <span className="text-xs">
-                          Last edited: {formatLastSaved(box.updatedAt.toString())}
+                          Last edited: {formatLastSaved(box.updatedAt)}
                         </span>
                       </div>
                     </CardDescription>
@@ -239,7 +246,7 @@ export default function HomePage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      disabled
+                      disabled // TODO: Implement sharing functionality
                     >
                       <Share2 className="h-4 w-4 mr-2" />
                       Share

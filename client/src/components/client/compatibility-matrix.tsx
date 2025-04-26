@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { AttributeCompatibility, Attribute, CompatibilityLevel } from "@shared/schema";
 
 interface CompatibilityMatrixProps {
@@ -15,7 +15,7 @@ export default function CompatibilityMatrix({ attributes, compatibilityData, onU
     new Map(compatibilityData.map(comp => [`${comp.attribute1Id}-${comp.attribute2Id}`, comp]))
   );
 
-  const compatibilityLevels: { value: CompatibilityLevel; label: string; color: string }[] = [
+  const compatibilityLevels: { value: CompatibilityLevel; label: string; color: string; }[] = [
     { value: -2, label: "Impossible", color: "bg-red-100 text-red-800" },
     { value: -1, label: "Difficult", color: "bg-orange-100 text-orange-800" },
     { value: 0, label: "Neutral", color: "bg-gray-100 text-gray-800" },
@@ -53,11 +53,11 @@ export default function CompatibilityMatrix({ attributes, compatibilityData, onU
                 if (attr1.id === attr2.id) {
                   return <TableCell key={attr2.id} className="bg-gray-50">-</TableCell>;
                 }
-                
+
                 const compatibility = matrix.get(`${attr1.id}-${attr2.id}`);
                 const level = compatibility?.level || 0;
                 const levelInfo = compatibilityLevels.find(l => l.value === level);
-                
+
                 return (
                   <TableCell key={attr2.id}>
                     <Select
@@ -69,8 +69,8 @@ export default function CompatibilityMatrix({ attributes, compatibilityData, onU
                       </SelectTrigger>
                       <SelectContent>
                         {compatibilityLevels.map(level => (
-                          <SelectItem 
-                            key={level.value} 
+                          <SelectItem
+                            key={level.value}
                             value={level.value.toString()}
                             className={level.color}
                           >

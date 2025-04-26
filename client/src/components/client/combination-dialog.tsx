@@ -18,7 +18,7 @@ import { Parameter, Attribute, AttributeCompatibility } from "@shared/schema";
 import { CombinationEvaluator } from "@/lib/scoring";
 
 // Define BoxParameter type directly here
-type BoxParameter = Parameter & { 
+type BoxParameter = Parameter & {
   attributes: Attribute[];
   weight?: number; // Engineering importance weight (1-10)
 };
@@ -31,7 +31,7 @@ const compatibilityMatrix: AttributeCompatibility[] = [
 ];
 
 // Convert the Record to TRIZPrinciple[] as expected by CombinationEvaluator
-const trizPrinciplesData: Record<number, { name: string; description: string }> = {
+const trizPrinciplesData: Record<number, { name: string; description: string; }> = {
   1: { name: "Segmentation", description: "Divide an object..." },
   2: { name: "Taking out", description: "Separate an interfering part..." },
   // ... Add other principles
@@ -92,8 +92,8 @@ export default function CombinationDialog({
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(combination => 
-        Object.entries(combination).some(([param, value]) => 
+      filtered = filtered.filter(combination =>
+        Object.entries(combination).some(([param, value]) =>
           value.toLowerCase().includes(searchTerm.toLowerCase()) ||
           param.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -103,7 +103,7 @@ export default function CombinationDialog({
     // Apply attribute filters
     Object.entries(filterConfig).forEach(([param, selectedValues]) => {
       if (selectedValues.length > 0) {
-        filtered = filtered.filter(combination => 
+        filtered = filtered.filter(combination =>
           selectedValues.includes(combination[param])
         );
       }
@@ -145,13 +145,13 @@ export default function CombinationDialog({
   // Export combinations to CSV
   const exportCSV = () => {
     if (!filteredCombinations.length) return;
-    
+
     // Get all parameter names
     const headers = Object.keys(filteredCombinations[0]);
-    
+
     // Create CSV content
     let csvContent = headers.join(",") + "\n";
-    
+
     filteredCombinations.forEach(combination => {
       const row = headers.map(header => {
         // Escape commas and quotes in values
@@ -160,7 +160,7 @@ export default function CombinationDialog({
       });
       csvContent += row.join(",") + "\n";
     });
-    
+
     // Create and download the file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -192,7 +192,7 @@ export default function CombinationDialog({
               <TabsTrigger value="analysis">Engineering Analysis</TabsTrigger>
               <TabsTrigger value="compatibility">TRIZ Principles</TabsTrigger>
             </TabsList>
-            
+
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={exportCSV}>
                 <Download className="h-4 w-4 mr-1" />
@@ -208,7 +208,7 @@ export default function CombinationDialog({
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-xs"
             />
-            
+
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Sort by" />
@@ -219,7 +219,7 @@ export default function CombinationDialog({
                 <SelectItem value="innovative">Innovation Potential</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Button variant="ghost" size="icon">
               <Filter className="h-4 w-4" />
             </Button>
@@ -228,7 +228,7 @@ export default function CombinationDialog({
           <TabsContent value="combinations" className="flex-1 flex space-x-4 mt-0">
             <div className="w-64 border rounded-md p-3 overflow-y-auto">
               <h3 className="font-medium mb-2 text-sm">Filter by Attributes</h3>
-              
+
               <ScrollArea className="h-[50vh]">
                 <div className="space-y-4">
                   {parameters.map(parameter => (
@@ -250,8 +250,8 @@ export default function CombinationDialog({
                               className="mr-2"
                               checked={filterConfig[parameter.name]?.includes(attribute.name)}
                               onChange={(e) => handleFilterChange(
-                                parameter.name, 
-                                attribute.name, 
+                                parameter.name,
+                                attribute.name,
                                 e.target.checked
                               )}
                             />
@@ -270,13 +270,13 @@ export default function CombinationDialog({
             <div className="flex-1 border rounded-md p-3">
               <div className="mb-2 flex justify-between items-center">
                 <h3 className="font-medium text-sm">
-                  Generated Combinations 
+                  Generated Combinations
                   <span className="text-gray-500 ml-2">
                     {filteredCombinations.length} of {combinationData?.total.toLocaleString() || 0}
                   </span>
                 </h3>
               </div>
-              
+
               <ScrollArea className="h-[50vh]">
                 <Table>
                   <TableHeader>
@@ -338,7 +338,7 @@ export default function CombinationDialog({
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="text-sm font-medium mb-2">Innovation Assessment</h4>
                   <div className="p-3 bg-gray-50 rounded-md">
@@ -346,15 +346,15 @@ export default function CombinationDialog({
                       Advanced evaluation of combinations using TRIZ principles, compatibility matrices,
                       and engineering constraints.
                     </p>
-                    <Button 
-                      className="mb-2" 
+                    <Button
+                      className="mb-2"
                       size="sm"
                       onClick={() => {
                         const evaluator = new CombinationEvaluator(
                           compatibilityMatrix, // Using placeholder with correct type
                           trizPrinciples // Using placeholder converted to array
                         );
-                        
+
                         const combinations = filteredCombinations.slice(0, 5);
                         const combinationsWithScores = combinations.map(comb => {
                           // Transform Combination (Record<string, string>) to Record<string, number> (using attribute IDs)
@@ -365,29 +365,29 @@ export default function CombinationDialog({
                               const selectedAttr = param.attributes.find(attr => attr.name === selectedAttrName);
                               if (selectedAttr) {
                                 // Use parameter name as key and attribute ID as value
-                                combinationForEval[param.name] = selectedAttr.id; 
+                                combinationForEval[param.name] = selectedAttr.id;
                               } else {
                                 // Handle cases where attribute name might not match (e.g., "Default")
                                 // For now, we'll assign 0, assuming the evaluator can handle it.
-                                combinationForEval[param.name] = 0; 
+                                combinationForEval[param.name] = 0;
                               }
                             }
                           });
 
                           // Pass the transformed combination and parameters
-                          const scores = evaluator.evaluateCombination(combinationForEval, parameters); 
+                          const scores = evaluator.evaluateCombination(combinationForEval, parameters);
                           return {
                             ...comb, // Keep original string-based combination for display
                             ...scores
                           };
                         }).filter(c => c.constraintsSatisfied);
-                        
+
                         // Update localStorage
                         localStorage.setItem('morphologicalBoxScores', JSON.stringify({
                           combinations: combinationsWithScores,
                           timestamp: new Date().toISOString()
                         }));
-                        
+
                         // In a real implementation, we would call a state update here
                         // to display the scores
                         alert("Analysis complete! View the top 5 combinations below.");
@@ -396,7 +396,7 @@ export default function CombinationDialog({
                       <Brain className="h-4 w-4 mr-1" />
                       Run Analysis
                     </Button>
-                    
+
                     {/* Sample engineering scores display */}
                     <div className="mt-4 border-t pt-3">
                       <h5 className="text-sm font-medium mb-2">Top Combinations by Technical Feasibility</h5>
@@ -437,13 +437,13 @@ export default function CombinationDialog({
                 </div>
                 <h3 className="font-medium">TRIZ Principles & Compatibility</h3>
               </div>
-              
+
               <div className="text-sm">
                 <p className="mb-4">
-                  TRIZ principles can help identify innovative solutions and resolve engineering contradictions 
+                  TRIZ principles can help identify innovative solutions and resolve engineering contradictions
                   in your morphological analysis.
                 </p>
-                
+
                 <h4 className="font-medium mb-2">Common Engineering Contradictions in Your Parameters:</h4>
                 <ul className="list-disc pl-5 mb-4 space-y-1">
                   <li>Weight vs. Strength</li>
@@ -451,7 +451,7 @@ export default function CombinationDialog({
                   <li>Reliability vs. Complexity</li>
                   <li>Power vs. Efficiency</li>
                 </ul>
-                
+
                 <h4 className="font-medium mb-2">Suggested TRIZ Principles:</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-gray-50 rounded-md">

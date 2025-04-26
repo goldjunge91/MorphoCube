@@ -25,11 +25,11 @@ export default function MorphBoxCreator({
 }: MorphBoxCreatorProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const [title, setTitle] = useState(initialTitle);
   const [lastSaved, setLastSaved] = useState<string | undefined>(undefined);
   const [isSaved, setIsSaved] = useState(false);
-  const [collaborators, setCollaborators] = useState<{ id: number; username: string }[]>([]);
+  const [collaborators, setCollaborators] = useState<{ id: number; username: string; }[]>([]);
 
   // Create or update a morphological box
   const morphBoxMutation = useMutation({
@@ -155,7 +155,7 @@ export default function MorphBoxCreator({
       title: "Export initiated",
       description: `Exporting as ${format.toUpperCase()}...`,
     });
-    
+
     // In a real application, this would trigger a download
     setTimeout(() => {
       toast({

@@ -5,7 +5,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Parameter, Attribute } from "@shared/schema";
 
 interface ParameterCardProps {
-  parameter: Parameter & { attributes?: Attribute[] };
+  parameter: Parameter & { attributes?: Attribute[]; };
   onEdit: (parameter: Parameter) => void;
   onDelete: (parameterId: number) => void;
 }

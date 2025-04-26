@@ -11,6 +11,8 @@ import {
   InsertSharedAccess,
   ParameterWithAttributes,
   MorphBoxWithParameters,
+  Tenant, // Import Tenant type
+  InsertTenant, // Import InsertTenant type
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -18,372 +20,256 @@ import { DatabaseStorage } from "./database-storage";
 const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
+  // Tenant operations
+  createTenant(insertTenant: InsertTenant): Promise<Tenant>;
+  getTenantBySlug(slug: string): Promise<Tenant | undefined>;
+  searchTenants(searchTerm: string): Promise<Tenant[]>;
+  getAllTenants(): Promise<Tenant[]>; // Added getAllTenants signature
+
   // User operations
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>; // Changed id to string
+  getUserByUsername(username: string): Promise<User | undefined>; // Keep username as string
+  getUserByUsernameAndTenant(username: string, tenantId: string): Promise<User | undefined>; // Add this
+  getUserByEmail(email: string): Promise<User | undefined>; // Keep email as string
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
-  deleteUser(id: number): Promise<boolean>;
+  updateUser(id: string, user: Partial<User>): Promise<User | undefined>; // Changed id to string
+  deleteUser(id: string): Promise<boolean>; // Changed id to string
   getAllUsers(): Promise<User[]>;
+  getUsersByTenantId(tenantId: string): Promise<User[]>; // Add this
 
   // Parameter operations
   createParameter(parameter: InsertParameter): Promise<Parameter>;
   updateParameter(
-    id: number,
+    id: number, // Parameter ID is number (serial)
     parameter: Partial<Parameter>,
   ): Promise<Parameter | undefined>;
-  getParameter(id: number): Promise<Parameter | undefined>;
-  getParametersByUserId(userId: number): Promise<ParameterWithAttributes[]>;
-  deleteParameter(id: number): Promise<boolean>;
+  getParameter(id: number): Promise<Parameter | undefined>; // Parameter ID is number (serial)
+  getParametersByUserId(userId: string): Promise<ParameterWithAttributes[]>; // Changed userId to string
+  deleteParameter(id: number): Promise<boolean>; // Parameter ID is number (serial)
 
   // Attribute operations
   createAttribute(attribute: InsertAttribute): Promise<Attribute>;
   updateAttribute(
-    id: number,
+    id: number, // Attribute ID is number (serial)
     attribute: Partial<Attribute>,
   ): Promise<Attribute | undefined>;
-  getAttribute(id: number): Promise<Attribute | undefined>;
-  getAttributesByParameterId(parameterId: number): Promise<Attribute[]>;
-  deleteAttribute(id: number): Promise<boolean>;
+  getAttribute(id: number): Promise<Attribute | undefined>; // Attribute ID is number (serial)
+  getAttributesByParameterId(parameterId: number): Promise<Attribute[]>; // Parameter ID is number (serial)
+  deleteAttribute(id: number): Promise<boolean>; // Attribute ID is number (serial)
 
   // Morphological Box operations
   createMorphBox(morphBox: InsertMorphBox): Promise<MorphBox>;
   updateMorphBox(
-    id: number,
+    id: number, // MorphBox ID is number (serial)
     morphBox: Partial<MorphBox>,
   ): Promise<MorphBox | undefined>;
-  getMorphBox(id: number): Promise<MorphBox | undefined>;
-  getMorphBoxesByUserId(userId: number): Promise<MorphBox[]>;
+  getMorphBox(id: number): Promise<MorphBox | undefined>; // MorphBox ID is number (serial)
+  getMorphBoxesByUserId(userId: string): Promise<MorphBox[]>; // Changed userId to string
   getMorphBoxWithParameters(
-    id: number,
+    id: number, // MorphBox ID is number (serial)
   ): Promise<MorphBoxWithParameters | undefined>;
-  deleteMorphBox(id: number): Promise<boolean>;
+  deleteMorphBox(id: number): Promise<boolean>; // MorphBox ID is number (serial)
   getPublicMorphBoxes(): Promise<MorphBox[]>;
 
   // Shared Access operations
   createSharedAccess(sharedAccess: InsertSharedAccess): Promise<SharedAccess>;
   updateSharedAccess(
-    id: number,
+    id: number, // SharedAccess ID is number (serial)
     sharedAccess: Partial<SharedAccess>,
   ): Promise<SharedAccess | undefined>;
   getSharedAccessByUserAndBox(
-    userId: number,
-    morphBoxId: number,
+    userId: string, // Changed userId to string
+    morphBoxId: number, // MorphBox ID is number (serial)
   ): Promise<SharedAccess | undefined>;
-  getSharedAccessesByUserId(userId: number): Promise<SharedAccess[]>;
-  getSharedAccessById(id: number): Promise<SharedAccess | undefined>; // Add this line
-  getMorphBoxesSharedWithUser(userId: number): Promise<MorphBox[]>;
-  deleteSharedAccess(id: number): Promise<boolean>;
+  getSharedAccessesByUserId(userId: string): Promise<SharedAccess[]>; // Changed userId to string
+  getSharedAccessById(id: number): Promise<SharedAccess | undefined>; // SharedAccess ID is number (serial)
+  getMorphBoxesSharedWithUser(userId: string): Promise<MorphBox[]>; // Changed userId to string
+  deleteSharedAccess(id: number): Promise<boolean>; // SharedAccess ID is number (serial)
 
   sessionStore: any;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private parameters: Map<number, Parameter>;
-  private attributes: Map<number, Attribute>;
-  private morphBoxes: Map<number, MorphBox>;
-  private sharedAccesses: Map<number, SharedAccess>;
+// MemStorage needs significant updates to handle UUIDs (strings) for users/tenants
+// and relationships. For now, focusing on DatabaseStorage.
+// export class MemStorage implements IStorage {
+//   // ... existing MemStorage code ...
+//   // NOTE: This implementation is likely incompatible now due to UUIDs and relations.
+//   // It needs to be updated or removed if only DatabaseStorage is used.
 
-  sessionStore: any; // Using any type for session store
+//   // --- Placeholder implementations for new Tenant/User methods ---
+//   async createTenant(insertTenant: InsertTenant): Promise<Tenant> { throw new Error("MemStorage.createTenant not implemented"); }
+//   async getTenantBySlug(slug: string): Promise<Tenant | undefined> { throw new Error("MemStorage.getTenantBySlug not implemented"); }
+//   async searchTenants(searchTerm: string): Promise<Tenant[]> { throw new Error("MemStorage.searchTenants not implemented"); }
+//   async getUserByUsernameAndTenant(username: string, tenantId: string): Promise<User | undefined> { throw new Error("MemStorage.getUserByUsernameAndTenant not implemented"); }
+//   async getUsersByTenantId(tenantId: string): Promise<User[]> { throw new Error("MemStorage.getUsersByTenantId not implemented"); }
 
-  private userCounter: number;
-  private parameterCounter: number;
-  private attributeCounter: number;
-  private morphBoxCounter: number;
-  private sharedAccessCounter: number;
+//   // --- Update existing User methods for string ID ---
+//   private users: Map<string, User>; // Changed key to string
+//   private userCounter: number; // Still used for generating *something*, but ID is UUID
 
-  constructor() {
-    this.users = new Map();
-    this.parameters = new Map();
-    this.attributes = new Map();
-    this.morphBoxes = new Map();
-    this.sharedAccesses = new Map();
+//   constructor() {
+//     this.users = new Map(); // Key is now string
+//     // ... other initializations ...
+//     this.userCounter = 1; // This counter is less relevant for UUIDs
+//     // ... other counter initializations ...
 
-    this.userCounter = 1;
-    this.parameterCounter = 1;
-    this.attributeCounter = 1;
-    this.morphBoxCounter = 1;
-    this.sharedAccessCounter = 1;
+//     this.sessionStore = new MemoryStore({
+//       checkPeriod: 86400000, // prune expired entries every 24h
+//     });
+//   }
+//   getUserByUsername(username: string): Promise<User | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getUserByEmail(email: string): Promise<User | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getAllUsers(): Promise<User[]> {
+//     throw new Error("Method not implemented.");
+//   }
+//   createParameter(parameter: InsertParameter): Promise<Parameter> {
+//     throw new Error("Method not implemented.");
+//   }
+//   updateParameter(id: number, parameter: Partial<Parameter>): Promise<Parameter | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getParameter(id: number): Promise<Parameter | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   deleteParameter(id: number): Promise<boolean> {
+//     throw new Error("Method not implemented.");
+//   }
+//   createAttribute(attribute: InsertAttribute): Promise<Attribute> {
+//     throw new Error("Method not implemented.");
+//   }
+//   updateAttribute(id: number, attribute: Partial<Attribute>): Promise<Attribute | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getAttribute(id: number): Promise<Attribute | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getAttributesByParameterId(parameterId: number): Promise<Attribute[]> {
+//     throw new Error("Method not implemented.");
+//   }
+//   deleteAttribute(id: number): Promise<boolean> {
+//     throw new Error("Method not implemented.");
+//   }
+//   createMorphBox(morphBox: InsertMorphBox): Promise<MorphBox> {
+//     throw new Error("Method not implemented.");
+//   }
+//   updateMorphBox(id: number, morphBox: Partial<MorphBox>): Promise<MorphBox | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getMorphBox(id: number): Promise<MorphBox | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getMorphBoxWithParameters(id: number): Promise<MorphBoxWithParameters | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   deleteMorphBox(id: number): Promise<boolean> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getPublicMorphBoxes(): Promise<MorphBox[]> {
+//     throw new Error("Method not implemented.");
+//   }
+//   createSharedAccess(sharedAccess: InsertSharedAccess): Promise<SharedAccess> {
+//     throw new Error("Method not implemented.");
+//   }
+//   updateSharedAccess(id: number, sharedAccess: Partial<SharedAccess>): Promise<SharedAccess | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   getSharedAccessById(id: number): Promise<SharedAccess | undefined> {
+//     throw new Error("Method not implemented.");
+//   }
+//   deleteSharedAccess(id: number): Promise<boolean> {
+//     throw new Error("Method not implemented.");
+//   }
+//   sessionStore: any;
 
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // prune expired entries every 24h
-    });
-  }
+//   async getUser(id: string): Promise<User | undefined> { // Changed id to string
+//     return this.users.get(id);
+//   }
 
-  // User operations
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
+//   // getUserByUsername/Email remain the same logic (iterate values)
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
+//   async createUser(insertUser: InsertUser): Promise<User> {
+//     const id = crypto.randomUUID(); // Generate UUID for user ID
+//     const now = new Date();
+//     const user: User = {
+//       // Ensure all required fields from the User type are present
+//       id,
+//       tenantId: insertUser.tenantId ?? null, // Handle potential null tenantId
+//       email: insertUser.email,
+//       username: insertUser.username,
+//       passwordHash: insertUser.passwordHash, // Assuming passwordHash is provided
+//       isAdmin: insertUser.isAdmin ?? false,
+//       isTenantAdmin: insertUser.isTenantAdmin ?? false,
+//       isSuperAdmin: false, // Default super admin to false
+//       isActive: insertUser.isActive ?? true,
+//       lastLogin: null, // Default lastLogin to null
+//       createdAt: now,
+//       updatedAt: now,
+//     };
+//     this.users.set(id, user);
+//     return user;
+//   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find((user) => user.email === email);
-  }
+//   async updateUser(
+//     id: string, // Changed id to string
+//     userData: Partial<User>,
+//   ): Promise<User | undefined> {
+//     const user = this.users.get(id);
+//     if (!user) return undefined;
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCounter++;
-    const now = new Date();
-    const user: User = {
-      id,
-      email: insertUser.email,
-      username: insertUser.username,
-      password: insertUser.password,
-      isAdmin: insertUser.isAdmin ?? false, // Add default value
-      createdAt: now,
-    };
-    this.users.set(id, user);
-    return user;
-  }
+//     // Ensure 'id' and 'createdAt' are not overwritten
+//     const { id: _, createdAt: __, ...updateData } = userData;
 
-  async updateUser(
-    id: number,
-    userData: Partial<User>,
-  ): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
+//     const updatedUser: User = {
+//       ...user,
+//       ...updateData,
+//       updatedAt: new Date(), // Always update 'updatedAt'
+//     };
+//     this.users.set(id, updatedUser);
+//     return updatedUser;
+//   }
 
-    const updatedUser = { ...user, ...userData };
-    this.users.set(id, updatedUser);
-    return updatedUser;
-  }
+//   async deleteUser(id: string): Promise<boolean> { // Changed id to string
+//     // Also need to handle related data (parameters, boxes, shared access) in MemStorage
+//     console.warn("MemStorage.deleteUser does not cascade deletes.");
+//     return this.users.delete(id);
+//   }
 
-  async deleteUser(id: number): Promise<boolean> {
-    return this.users.delete(id);
-  }
+//   // getAllUsers remains the same logic (iterate values)
 
-  async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
-  }
+//   // --- Update methods using userId ---
 
-  // Parameter operations
-  async createParameter(insertParameter: InsertParameter): Promise<Parameter> {
-    const id = this.parameterCounter++;
-    const parameter: Parameter = { id, ...insertParameter };
-    this.parameters.set(id, parameter);
-    return parameter;
-  }
+//   async getParametersByUserId(userId: string): Promise<ParameterWithAttributes[]> { // Changed userId to string
+//     // ... implementation needs update for string comparison ...
+//     throw new Error("MemStorage.getParametersByUserId needs update for string IDs.");
+//   }
 
-  async updateParameter(
-    id: number,
-    parameterData: Partial<Parameter>,
-  ): Promise<Parameter | undefined> {
-    const parameter = this.parameters.get(id);
-    if (!parameter) return undefined;
+//   async getMorphBoxesByUserId(userId: string): Promise<MorphBox[]> { // Changed userId to string
+//     // ... implementation needs update for string comparison ...
+//     throw new Error("MemStorage.getMorphBoxesByUserId needs update for string IDs.");
+//   }
 
-    const updatedParameter = { ...parameter, ...parameterData };
-    this.parameters.set(id, updatedParameter);
-    return updatedParameter;
-  }
+//   async getSharedAccessByUserAndBox(userId: string, morphBoxId: number): Promise<SharedAccess | undefined> { // Changed userId to string
+//     // ... implementation needs update for string comparison ...
+//     throw new Error("MemStorage.getSharedAccessByUserAndBox needs update for string IDs.");
+//   }
 
-  async getParameter(id: number): Promise<Parameter | undefined> {
-    return this.parameters.get(id);
-  }
+//   async getSharedAccessesByUserId(userId: string): Promise<SharedAccess[]> { // Changed userId to string
+//     // ... implementation needs update for string comparison ...
+//     throw new Error("MemStorage.getSharedAccessesByUserId needs update for string IDs.");
+//   }
 
-  async getParametersByUserId(
-    userId: number,
-  ): Promise<ParameterWithAttributes[]> {
-    const userParameters = Array.from(this.parameters.values()).filter(
-      (parameter) => parameter.userId === userId,
-    );
+//   async getMorphBoxesSharedWithUser(userId: string): Promise<MorphBox[]> { // Changed userId to string
+//     // ... implementation needs update for string IDs ...
+//     throw new Error("MemStorage.getMorphBoxesSharedWithUser needs update for string IDs.");
+//   }
 
-    const result: ParameterWithAttributes[] = [];
-    for (const param of userParameters) {
-      const paramAttributes = await this.getAttributesByParameterId(param.id);
-      result.push({
-        ...param,
-        attributes: paramAttributes,
-      });
-    }
-    return result;
-  }
-  async deleteParameter(id: number): Promise<boolean> {
-    // Delete associated attributes
-    Array.from(this.attributes.values())
-      .filter((attr) => attr.parameterId === id)
-      .forEach((attr) => this.attributes.delete(attr.id));
+//   // ... rest of MemStorage ...
+// }
 
-    return this.parameters.delete(id);
-  }
-  // Attribute operations
-  async createAttribute(insertAttribute: InsertAttribute): Promise<Attribute> {
-    const id = this.attributeCounter++;
-    const attribute: Attribute = { id, ...insertAttribute };
-    this.attributes.set(id, attribute);
-    return attribute;
-  }
-
-  async updateAttribute(
-    id: number,
-    attributeData: Partial<Attribute>,
-  ): Promise<Attribute | undefined> {
-    const attribute = this.attributes.get(id);
-    if (!attribute) return undefined;
-
-    const updatedAttribute = { ...attribute, ...attributeData };
-    this.attributes.set(id, updatedAttribute);
-    return updatedAttribute;
-  }
-
-  async getAttribute(id: number): Promise<Attribute | undefined> {
-    return this.attributes.get(id);
-  }
-
-  async getAttributesByParameterId(parameterId: number): Promise<Attribute[]> {
-    return Array.from(this.attributes.values()).filter(
-      (attribute) => attribute.parameterId === parameterId,
-    );
-  }
-
-  async deleteAttribute(id: number): Promise<boolean> {
-    return this.attributes.delete(id);
-  }
-
-  // Morphological Box operations
-  async createMorphBox(insertMorphBox: InsertMorphBox): Promise<MorphBox> {
-    const id = this.morphBoxCounter++;
-    const now = new Date();
-    const morphBox: MorphBox = {
-      id,
-      title: insertMorphBox.title,
-      userId: insertMorphBox.userId,
-      description: insertMorphBox.description ?? null, // Add default value (or handle null appropriately)
-      isPublic: insertMorphBox.isPublic ?? false, // Add default value
-      content: insertMorphBox.content ?? {}, // Add default value
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.morphBoxes.set(id, morphBox);
-    return morphBox;
-  }
-
-  async updateMorphBox(
-    id: number,
-    morphBoxData: Partial<MorphBox>,
-  ): Promise<MorphBox | undefined> {
-    const morphBox = this.morphBoxes.get(id);
-    if (!morphBox) return undefined;
-
-    const updatedMorphBox = {
-      ...morphBox,
-      ...morphBoxData,
-      updatedAt: new Date(),
-    };
-    this.morphBoxes.set(id, updatedMorphBox);
-    return updatedMorphBox;
-  }
-
-  async getMorphBox(id: number): Promise<MorphBox | undefined> {
-    return this.morphBoxes.get(id);
-  }
-
-  async getMorphBoxesByUserId(userId: number): Promise<MorphBox[]> {
-    return Array.from(this.morphBoxes.values()).filter(
-      (morphBox) => morphBox.userId === userId,
-    );
-  }
-
-  async getMorphBoxWithParameters(
-    id: number,
-  ): Promise<MorphBoxWithParameters | undefined> {
-    const morphBox = this.morphBoxes.get(id);
-    if (!morphBox) return undefined;
-
-    const parameters = await this.getParametersByUserId(morphBox.userId);
-    const parametersWithAttributes: ParameterWithAttributes[] = [];
-
-    for (const parameter of parameters) {
-      const attributes = await this.getAttributesByParameterId(parameter.id);
-      parametersWithAttributes.push({
-        ...parameter,
-        attributes,
-      });
-    }
-
-    return {
-      ...morphBox,
-      parameters: parametersWithAttributes,
-    };
-  }
-
-  async deleteMorphBox(id: number): Promise<boolean> {
-    // Delete associated shared access entries
-    Array.from(this.sharedAccesses.values())
-      .filter((access) => access.morphBoxId === id)
-      .forEach((access) => this.sharedAccesses.delete(access.id));
-
-    return this.morphBoxes.delete(id);
-  }
-
-  async getPublicMorphBoxes(): Promise<MorphBox[]> {
-    return Array.from(this.morphBoxes.values()).filter((box) => box.isPublic);
-  }
-
-  // Shared Access operations
-  async createSharedAccess(
-    insertSharedAccess: InsertSharedAccess,
-  ): Promise<SharedAccess> {
-    const id = this.sharedAccessCounter++;
-    const now = new Date();
-    const sharedAccess: SharedAccess = {
-      id,
-      userId: insertSharedAccess.userId,
-      morphBoxId: insertSharedAccess.morphBoxId,
-      canEdit: insertSharedAccess.canEdit ?? false, // Add default value
-      createdAt: now,
-    };
-    this.sharedAccesses.set(id, sharedAccess);
-    return sharedAccess;
-  }
-
-  async updateSharedAccess(
-    id: number,
-    sharedAccessData: Partial<SharedAccess>,
-  ): Promise<SharedAccess | undefined> {
-    const sharedAccess = this.sharedAccesses.get(id);
-    if (!sharedAccess) return undefined;
-
-    const updatedSharedAccess = { ...sharedAccess, ...sharedAccessData };
-    this.sharedAccesses.set(id, updatedSharedAccess);
-    return updatedSharedAccess;
-  }
-
-  async getSharedAccessByUserAndBox(
-    userId: number,
-    morphBoxId: number,
-  ): Promise<SharedAccess | undefined> {
-    return Array.from(this.sharedAccesses.values()).find(
-      (access) => access.userId === userId && access.morphBoxId === morphBoxId,
-    );
-  }
-
-  async getSharedAccessesByUserId(userId: number): Promise<SharedAccess[]> {
-    return Array.from(this.sharedAccesses.values()).filter(
-      (access) => access.userId === userId,
-    );
-  }
-
-  async getSharedAccessById(id: number): Promise<SharedAccess | undefined> {
-    return this.sharedAccesses.get(id);
-  }
-
-  async getMorphBoxesSharedWithUser(userId: number): Promise<MorphBox[]> {
-    const sharedAccesses = await this.getSharedAccessesByUserId(userId);
-    return sharedAccesses
-      .map((access) => this.morphBoxes.get(access.morphBoxId))
-      .filter((box): box is MorphBox => box !== undefined);
-  }
-
-  async deleteSharedAccess(id: number): Promise<boolean> {
-    return this.sharedAccesses.delete(id);
-  }
-}
 
 // Use the DatabaseStorage instead of MemStorage
 export const storage = new DatabaseStorage();

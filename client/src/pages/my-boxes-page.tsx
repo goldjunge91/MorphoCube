@@ -4,8 +4,8 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import Layout from "@/components/layout";
-import MorphBoxCreator from "@/components/morph-box-creator";
+import Layout from "@/components/client/layout";
+import MorphBoxCreator from "@/components/client/morph-box-creator";
 import {
   Card,
   CardContent,
@@ -54,8 +54,8 @@ import { MorphBox } from "@shared/schema";
 export default function MyBoxesPage() {
   const [searchLocation, navigate] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
-  
+  const { user, isLoading } = useAuth();
+
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [editingBox, setEditingBox] = useState<MorphBox | null>(null);
@@ -68,7 +68,7 @@ export default function MyBoxesPage() {
     const params = new URLSearchParams(searchLocation.split('?')[1]);
     const boxId = params.get('id');
     const createParam = params.get('create');
-    
+
     if (boxId) {
       // Fetch the specific box and set it for editing
       fetchBoxById(parseInt(boxId));
@@ -78,7 +78,7 @@ export default function MyBoxesPage() {
   }, [searchLocation]);
 
   // Fetch all boxes
-  const { data: morphBoxes, isLoading } = useQuery<MorphBox[]>({
+  const { data: morphBoxes, isLoading: isBoxesLoading } = useQuery<MorphBox[]>({
     queryKey: ["/api/morphboxes"],
   });
 
@@ -88,11 +88,11 @@ export default function MyBoxesPage() {
       const response = await fetch(`/api/morphboxes/${id}`, {
         credentials: "include",
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch box");
       }
-      
+
       const data = await response.json();
       setEditingBox(data);
     } catch (error) {
@@ -114,7 +114,7 @@ export default function MyBoxesPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/morphboxes"] });
       setBoxToDelete(null);
       setDeleteDialogOpen(false);
-      
+
       toast({
         title: "Box deleted",
         description: "The morphological box has been deleted successfully.",
@@ -165,21 +165,21 @@ export default function MyBoxesPage() {
   // Filter boxes based on search term and active tab
   const filteredBoxes = morphBoxes
     ? morphBoxes
-        .filter(box => 
-          searchTerm 
-            ? box.title.toLowerCase().includes(searchTerm.toLowerCase())
-            : true
-        )
-        .filter(box => {
-          if (activeTab === "all") return true;
-          if (activeTab === "recent") {
-            // Consider boxes from the last 7 days as recent
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            return new Date(box.updatedAt) >= sevenDaysAgo;
-          }
-          return false;
-        })
+      .filter(box =>
+        searchTerm
+          ? box.title.toLowerCase().includes(searchTerm.toLowerCase())
+          : true
+      )
+      .filter(box => {
+        if (activeTab === "all") return true;
+        if (activeTab === "recent") {
+          // Consider boxes from the last 7 days as recent
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          return new Date(box.updatedAt) >= sevenDaysAgo;
+        }
+        return false;
+      })
     : [];
 
   // If editing or creating a box, show the morph box creator
@@ -191,7 +191,7 @@ export default function MyBoxesPage() {
             &larr; Back to My Boxes
           </Button>
         </div>
-        
+
         <MorphBoxCreator
           morphBoxId={editingBox?.id}
           initialTitle={editingBox?.title || "New Morphological Box"}
@@ -205,7 +205,7 @@ export default function MyBoxesPage() {
   // Format the last saved time to a readable format
   const formatLastSaved = (timestamp?: string) => {
     if (!timestamp) return "Never";
-    
+
     const date = new Date(timestamp);
     return date.toLocaleDateString(undefined, {
       year: 'numeric',
@@ -215,6 +215,15 @@ export default function MyBoxesPage() {
       minute: '2-digit'
     });
   };
+
+  if (isLoading) {
+    return <Layout title="My Boxes"><div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></Layout>;
+  }
+
+  if (!user) {
+    // Should be handled by ProtectedRoute, but good practice
+    return <Layout title="My Boxes"><p>Please log in to view your boxes.</p></Layout>;
+  }
 
   return (
     <Layout title="My Morphological Boxes">
@@ -231,7 +240,7 @@ export default function MyBoxesPage() {
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               {searchTerm && (
-                <button 
+                <button
                   onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
@@ -252,7 +261,7 @@ export default function MyBoxesPage() {
             <TabsTrigger value="recent">Recent</TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="mt-6">
-            {isLoading ? (
+            {isBoxesLoading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
@@ -312,7 +321,7 @@ export default function MyBoxesPage() {
                               Export
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleDeleteBox(box)}
                               className="text-destructive focus:text-destructive"
                             >
@@ -337,8 +346,8 @@ export default function MyBoxesPage() {
                       </p>
                     </CardContent>
                     <CardFooter className="flex justify-between">
-                      <Button 
-                        variant="default" 
+                      <Button
+                        variant="default"
                         size="sm"
                         onClick={() => handleEditBox(box)}
                       >

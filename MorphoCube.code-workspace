@@ -7,7 +7,7 @@
 	"settings": {
 		"github.copilot.chat.testGeneration.instructions": [
 			{
-				"text": "Use Vitest & Playwright for testing Typescript React components. Do not use any mocks if possible. Use the actual component for testing. Do not use any mocks if possible."
+				"text": "Use Vitest & Playwright for testing Typescript React components. Do not use any mocks if possible. Use the actual component for testing. Do not use any mocks if possible. Ignore / exclude: 'node_modules', '.devcontainer', '.ai'"
 			},
 			// {
 			// 	"file": ".github/copilot-instructions.md"
@@ -20,7 +20,7 @@
 		],
 		"github.copilot.chat.codeGeneration.instructions": [
 			{
-				"text": "Never use placeholder or Dummy data, only the USER explicitly says to use it."
+				"text": "Never use placeholder or Dummy data, only the USER explicitly says to use it. Ignore / exclude: 'node_modules', '.devcontainer', '.ai'"
 			},
 			{
 				"file": ".github/copilot-instructions.md" // import instructions from file `.github/copilot-instructions.md`
