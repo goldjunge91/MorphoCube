@@ -49,22 +49,14 @@ Durch systematische Kombination dieser Elemente können umfassende Lösungsräum
   - Strategische Planung
 - Bibliothek wiederverwendbarer Parameter und Ausprägungen
 
-### 4. Zusammenarbeit & Teilung
-- Echtzeit-Kollaboration an gemeinsamen Projekten
-- Differenzierte Zugriffsrechte (Lesen/Schreiben)
-- Kommentarfunktion für Diskussionen
-- Benachrichtigungen bei Änderungen
-- Strukturierte Feedback-Runden mit Stakeholdern
-- Abstimmungsfunktion für Teams zur Bewertung von Lösungskombinationen
+### 4. Erweiterte Visualisierung
+- Heatmaps zur Darstellung von Bewertungsmetriken
+- Netzwerkgraphen zur Visualisierung von Parameterbeziehungen
+- Interaktive 3D-Darstellung für komplexe Lösungsräume
+- Dashboard mit Key Performance Indicators für Lösungskonzepte
+- Exportierbare Entscheidungsbäume
 
-### 5. Export & Integration
-- Export in gängige Formate (PDF, Excel, CSV)
-- API-Schnittstelle für Integration mit anderen Tools
-- Offline-Funktionalität für grundlegende Operationen
-- Embedding-Option für Präsentationen und Berichte
-- Generierung interaktiver Visualisierungen für Präsentationen
-
-### 6. Analyse & Bewertungstools
+### 5. Analyse & Bewertungstools
 - Kompatibilitätsmatrizen zur Bewertung der Verträglichkeit zwischen Ausprägungen
 - Scoring-Module zur qualitativen und quantitativen Bewertung von Lösungskombinationen
 - Konsistenzprüfung für ausgewählte Lösungswege
@@ -75,12 +67,22 @@ Durch systematische Kombination dieser Elemente können umfassende Lösungsräum
   - Innovationsgrad
   - Benutzerdefinierte Kriterien
 
-### 7. Erweiterte Visualisierung
-- Heatmaps zur Darstellung von Bewertungsmetriken
-- Netzwerkgraphen zur Visualisierung von Parameterbeziehungen
-- Interaktive 3D-Darstellung für komplexe Lösungsräume
-- Dashboard mit Key Performance Indicators für Lösungskonzepte
-- Exportierbare Entscheidungsbäume
+
+### 6. Zusammenarbeit & Teilung
+- Echtzeit-Kollaboration an gemeinsamen Projekten
+- Differenzierte Zugriffsrechte (Lesen/Schreiben)
+- Kommentarfunktion für Diskussionen
+- Benachrichtigungen bei Änderungen
+- Strukturierte Feedback-Runden mit Stakeholdern
+- Abstimmungsfunktion für Teams zur Bewertung von Lösungskombinationen
+
+### 7. Export & Integration
+- Export in gängige Formate (PDF, Excel, CSV)
+- API-Schnittstelle für Integration mit anderen Tools
+- Offline-Funktionalität für grundlegende Operationen
+- Embedding-Option für Präsentationen und Berichte
+- Generierung interaktiver Visualisierungen für Präsentationen
+
 
 ## Technische Architektur
 
@@ -147,16 +149,38 @@ Durch systematische Kombination dieser Elemente können umfassende Lösungsräum
 - CRUD-Operationen für Parameter und Ausprägungen
 - Persistenz der erstellten Kästen
 
-### Phase 3: Kollaboration & Erweiterung
-- Implementierung der Sharing-Funktionalität
-- Echtzeit-Kollaboration
-- Versionskontrolle und Änderungsverfolgung
-
-### Phase 4: Erweitertes Feature-Set
-- Erweiterte Exportfunktionen
+### Phase 3: Standard Feature-Set
+- Export und import funktionen
 - Vorlagen-System
 - Analysetools für morphologische Kästen
 - Kompatibilitätsmatrizen für Parameter-Ausprägungen
+
+### Phase 4: Erweitertes Feature-Set
+- Erweiterte Export und Import funktionen
+- Vorlagen-System erweiterung
+- Analysetools für morphologische Kästen, und 
+  - Heatmaps
+  - Netzwerkgraphen
+  - Interaktive 3D-Darstellung
+- Dashboard mit KPIs
+- Kompatibilitätsmatrizen für Parameter-Ausprägungen und
+  - Scoring-Module
+  - Konsistenzprüfung
+  - Automatische Generierung vielversprechender Lösungskombinationen
+  - Bewertungsfilter
+- Bewertungsfilter basierend auf:
+  - Technischer Machbarkeit
+  - Kosten und Ressourceneffizienz
+  - Innovationsgrad
+  - Benutzerdefinierte Kriterien
+- Erweiterte Parameter-Metadaten:
+  - Beschreibungen
+  - Typen
+  - Gewichtung
+  - Validierungsregeln
+  - Standardwerte
+  - Anhänge
+  - Referenzen
 
 ### Phase 5: Optimierung & Finalisierung
 - Performance-Optimierung
@@ -170,7 +194,12 @@ Durch systematische Kombination dieser Elemente können umfassende Lösungsräum
 - Vorlagen für spezifische Anwendungsdomänen
 - Anpassung an domänenspezifische Best Practices
 
-### Phase 7: KI-Erweiterungen
+### Phase 7: Kollaboration & Erweiterung
+- Implementierung der Sharing-Funktionalität
+- Echtzeit-Kollaboration
+- Versionskontrolle und Änderungsverfolgung
+
+### Phase 8: KI-Erweiterungen
 - Implementierung von Vorschlagsalgorithmen für Parameter und Ausprägungen
 - Automatisierte Bewertungshilfen für generierte Lösungskombinationen
 - Semantische Analyse von Parameterbeschreibungen
@@ -179,9 +208,11 @@ Durch systematische Kombination dieser Elemente können umfassende Lösungsräum
 ## Installation und Entwicklung
 
 ### Voraussetzungen
-- Node.js (v18 oder höher)
-- PostgreSQL (v14 oder höher)
+- Node.js (v20 oder höher)
+- React (v19 oder höher)
+- PostgreSQL (v14 Neon)
 - pnpm als Paketmanager
+- Docker (optional, für Containerisierung)
 
 ### Projektstruktur
 
