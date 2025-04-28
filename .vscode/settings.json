@@ -7,6 +7,12 @@
   "extensions.experimental.affinity": {
     "better-ts-errors.better-ts-errors": 1
   },
+  "workbench.editor.customLabels.patterns": {
+    "**/app/**/page.tsx": "${dirname} <page>",
+    "**/app/**/layout.tsx": "${dirname} <layout>",
+    "**/app/**/route.ts": "${dirname} <route>",
+    "**/index.tsx": "${filename} <${dirname}>"
+  },
   "typescript.suggest.paths": true,
   // Prefix for test files, default: 'test'
   "testPilot.testFileExtensionPrefix": "spec",

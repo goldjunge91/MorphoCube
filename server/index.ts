@@ -4,19 +4,18 @@ import cors from "cors";
 import morgan from "morgan";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-// storage wird für initializeAppData benötigt, aber initialize() selbst existiert nicht
-// import { storage } from "./storage"; 
+import { initialize, storage } from "./storage"; // Import initialize
 
 async function main() {
   const app = express();
   const port = process.env.PORT || 3000;
 
-  // --- Middleware ---
-  // CORS Configuration - SEHR WICHTIG für Cookies/Sessions
+  // --- Initialisiere Storage und Session-Store ---
+  await initialize(); // Initialisiere die Storage-Implementierung
+
   app.use(
     cors({
-      // Passe dies an den tatsächlichen Ursprung deines Frontends an
-      origin: process.env.FRONTEND_URL || "http://localhost:5173",
+      origin: process.env.FRONTEND_URL || "http://localhost:3000",
       credentials: true, // Erlaube das Senden von Cookies
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // Erlaubte Methoden
       allowedHeaders: ["Content-Type", "Authorization"], // Erlaubte Header

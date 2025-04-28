@@ -5,6 +5,12 @@
 		}
 	],
 	"settings": {
+		"workbench.editor.customLabels.patterns": {
+			"**/app/**/page.tsx": "${dirname} <page>",
+			"**/app/**/layout.tsx": "${dirname} <layout>",
+			"**/app/**/route.ts": "${dirname} <route>",
+			"**/index.tsx": "${filename} <${dirname}>"
+		},
 		"github.copilot.chat.testGeneration.instructions": [
 			{
 				"text": "Use Vitest & Playwright for testing Typescript React components. Do not use any mocks if possible. Use the actual component for testing. Do not use any mocks if possible. Ignore / exclude: 'node_modules', '.devcontainer', '.ai'"

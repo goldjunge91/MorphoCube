@@ -51,11 +51,11 @@ const IdParamSchema = z.object({
 });
 
 const NumericIdParamSchema = z.object({
-  id: z.string().regex(/^\d+$/, "ID must be a number").transform(Number),
+  id: z.string().regex(/^\d+$/, "ID must be a number"),
 });
 
 const ParameterIdParamSchema = z.object({
-  parameterId: z.string().regex(/^\d+$/, "Parameter ID must be a number").transform(Number),
+  parameterId: z.string().regex(/^\d+$/, "Parameter ID must be a number"),
 });
 
 const SlugParamSchema = z.object({
@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   parameterRouter.get("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const parameterId = req.params.id as unknown as number; // Validated and transformed
+      const parameterId = req.params.id; // Sollte bereits ein String sein
       const parameter = await storage.getParameter(parameterId);
       if (!parameter) {
         return res.status(404).json({ message: "Parameter not found" });
@@ -308,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   parameterRouter.patch("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const parameterId = req.params.id as unknown as number;
+      const parameterId = req.params.id;
       const parameter = await storage.getParameter(parameterId);
       if (!parameter) {
         return res.status(404).json({ message: "Parameter not found" });
@@ -327,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   parameterRouter.delete("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const parameterId = req.params.id as unknown as number;
+      const parameterId = req.params.id;
       const parameter = await storage.getParameter(parameterId);
       if (!parameter) {
         return res.status(404).json({ message: "Parameter not found" });
@@ -346,7 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Nested Attribute routes within Parameter router
   parameterRouter.get("/:parameterId/attributes", validateRequest(ParameterIdParamSchema, 'params'), async (req, res) => {
     try {
-      const parameterId = req.params.parameterId as unknown as number;
+      const parameterId = req.params.parameterId;
       const parameter = await storage.getParameter(parameterId);
       if (!parameter) {
         return res.status(404).json({ message: "Parameter not found" });
@@ -388,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   attributeRouter.patch("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const attributeId = req.params.id as unknown as number;
+      const attributeId = req.params.id;
       const attribute = await storage.getAttribute(attributeId);
       if (!attribute) {
         return res.status(404).json({ message: "Attribute not found" });
@@ -411,7 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   attributeRouter.delete("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const attributeId = req.params.id as unknown as number;
+      const attributeId = req.params.id;
       const attribute = await storage.getAttribute(attributeId);
       if (!attribute) {
         return res.status(404).json({ message: "Attribute not found" });
@@ -482,13 +482,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public boxes route - outside the authenticated router? Or keep here?
-  // Moved outside isAuthenticated middleware for now
-  // morphBoxRouter.get("/public", ...);
-
   morphBoxRouter.get("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const morphBoxId = req.params.id as unknown as number;
+      const morphBoxId = req.params.id;
       const morphBox = await storage.getMorphBox(morphBoxId);
       if (!morphBox) {
         return res.status(404).json({ message: "Morphological Box not found" });
@@ -512,7 +508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   morphBoxRouter.patch("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const morphBoxId = req.params.id as unknown as number;
+      const morphBoxId = req.params.id;
       const morphBox = await storage.getMorphBox(morphBoxId);
       if (!morphBox) {
         return res.status(404).json({ message: "Morphological Box not found" });
@@ -539,7 +535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   morphBoxRouter.delete("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const morphBoxId = req.params.id as unknown as number;
+      const morphBoxId = req.params.id;
       const morphBox = await storage.getMorphBox(morphBoxId);
       if (!morphBox) {
         return res.status(404).json({ message: "Morphological Box not found" });
@@ -612,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   sharedAccessRouter.delete("/:id", validateRequest(NumericIdParamSchema, 'params'), async (req, res) => {
     try {
-      const sharedId = req.params.id as unknown as number;
+      const sharedId = req.params.id;
       const sharedAccess = await storage.getSharedAccessById(sharedId);
       if (!sharedAccess) {
         return res.status(404).json({ message: "Shared access entry not found" });

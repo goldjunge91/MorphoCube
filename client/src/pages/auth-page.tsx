@@ -351,9 +351,7 @@ export default function AuthPage() {
                     Erstellen Sie Ihren eigenen Arbeitsbereich und laden Sie Teammitglieder ein
                   </CardDescription>
                 </CardHeader>
-                {/* Pass the correct form type */}
                 <Form {...register_tenant_form}>
-                  {/* Use the correctly typed handler */}
                   <form onSubmit={register_tenant_form.handleSubmit(OnRegisterTenantSubmit)}>
                     <CardContent className="space-y-6"> {/* Increased spacing */}
                       <div className="space-y-4">

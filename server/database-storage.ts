@@ -23,27 +23,41 @@ import {
 import { IStorage } from "./storage";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import memorystore from "memorystore";
 import { db } from "./db";
 import { eq, and, desc, asc, sql, ilike } from "drizzle-orm"; // Import ilike for case-insensitive search
 import { Pool } from 'pg';
 
+// Erstelle Connect-Stores
 const PostgresSessionStore = connectPg(session);
+const MemoryStore = memorystore(session);
 
-// Erstelle eine separate Pool-Instanz für die Sitzungsspeicherung
-const session_pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// Prüfe, ob wir uns in einer Entwicklungsumgebung befinden
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export class DatabaseStorage implements IStorage {
-  [x: string]: any;
   sessionStore: any; // Using any type for SessionStore to avoid TypeScript error
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({
-      pool: session_pool,
-      createTableIfMissing: true,
-    });
+    if (isDevelopment) {
+      console.log("Verwende Memory-Session-Store für Entwicklungsumgebung");
+      // Verwende Memory-Store in der Entwicklungsumgebung
+      this.sessionStore = new MemoryStore({
+        checkPeriod: 86400000 // Bereinige abgelaufene Einträge nach 24h
+      });
+    } else {
+      console.log("Verwende PostgreSQL-Session-Store für Produktionsumgebung");
+      // Erstelle eine separate Pool-Instanz für die Sitzungsspeicherung in Produktion
+      const session_pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+      });
+
+      this.sessionStore = new PostgresSessionStore({
+        pool: session_pool,
+        createTableIfMissing: true,
+      });
+    }
   }
 
   // --- Tenant Operations ---
@@ -152,7 +166,6 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(users).where(eq(users.tenantId, tenantId));
   }
 
-
   // --- Parameter Operations ---
   async createParameter(insertParameter: InsertParameter): Promise<Parameter> {
     const [parameter] = await db
@@ -163,7 +176,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateParameter(
-    id: number, // ID is serial (number)
+    id: string, // ID ist jetzt string gemäß Interface
     parameterData: Partial<Parameter>,
   ): Promise<Parameter | undefined> {
     const [parameter] = await db
@@ -174,7 +187,7 @@ export class DatabaseStorage implements IStorage {
     return parameter;
   }
 
-  async getParameter(id: number): Promise<Parameter | undefined> { // ID is serial (number)
+  async getParameter(id: string): Promise<Parameter | undefined> { // ID ist jetzt string gemäß Interface
     const [parameter] = await db
       .select()
       .from(parameters)
@@ -183,13 +196,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getParametersByUserId(
-    userId: string, // userId is string (UUID)
+    userId: string, // userId ist string (UUID)
   ): Promise<ParameterWithAttributes[]> {
     // 1. Parameter für den Benutzer abrufen
     const userParameters = await db
       .select()
       .from(parameters)
-      .where(eq(parameters.userId, userId)) // Compare UUID string with string
+      .where(eq(parameters.userId, userId)) // Vergleiche UUID string mit string
       .orderBy(asc(parameters.name)); // Optional: Sortieren
 
     // 2. Für jeden Parameter die zugehörigen Attribute abrufen und kombinieren
@@ -198,7 +211,7 @@ export class DatabaseStorage implements IStorage {
       const attrs = await db
         .select()
         .from(attributes)
-        .where(eq(attributes.parameterId, param.id)) // param.id is number
+        .where(eq(attributes.parameterId, param.id)) // param.id ist string (UUID)
         .orderBy(asc(attributes.name)); // Optional: Sortieren
 
       parametersWithAttributes.push({
@@ -210,7 +223,7 @@ export class DatabaseStorage implements IStorage {
     return parametersWithAttributes;
   }
 
-  async deleteParameter(id: number): Promise<boolean> { // ID is serial (number)
+  async deleteParameter(id: string): Promise<boolean> { // ID ist jetzt string gemäß Interface
     // Lösche den Parameter
     const result = await db.delete(parameters).where(eq(parameters.id, id));
     return (result.rowCount ?? 0) > 0;
@@ -226,7 +239,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAttribute(
-    id: number, // ID is serial (number)
+    id: string, // ID ist jetzt string gemäß Interface
     attributeData: Partial<Attribute>,
   ): Promise<Attribute | undefined> {
     const [attribute] = await db
@@ -237,7 +250,7 @@ export class DatabaseStorage implements IStorage {
     return attribute;
   }
 
-  async getAttribute(id: number): Promise<Attribute | undefined> { // ID is serial (number)
+  async getAttribute(id: string): Promise<Attribute | undefined> { // ID ist jetzt string gemäß Interface
     const [attribute] = await db
       .select()
       .from(attributes)
@@ -245,14 +258,14 @@ export class DatabaseStorage implements IStorage {
     return attribute;
   }
 
-  async getAttributesByParameterId(parameterId: number): Promise<Attribute[]> { // parameterId is number
+  async getAttributesByParameterId(parameterId: string): Promise<Attribute[]> { // parameterId ist jetzt string
     return db
       .select()
       .from(attributes)
       .where(eq(attributes.parameterId, parameterId));
   }
 
-  async deleteAttribute(id: number): Promise<boolean> { // ID is serial (number)
+  async deleteAttribute(id: string): Promise<boolean> { // ID ist jetzt string gemäß Interface
     const result = await db.delete(attributes).where(eq(attributes.id, id));
     return (result.rowCount ?? 0) > 0;
   }
@@ -267,7 +280,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMorphBox(
-    id: number, // ID is serial (number)
+    id: string, // ID ist jetzt string gemäß Interface
     morphBoxData: Partial<MorphBox>,
   ): Promise<MorphBox | undefined> {
     const updatedData = {
@@ -283,7 +296,7 @@ export class DatabaseStorage implements IStorage {
     return morphBox;
   }
 
-  async getMorphBox(id: number): Promise<MorphBox | undefined> { // ID is serial (number)
+  async getMorphBox(id: string): Promise<MorphBox | undefined> { // ID ist jetzt string gemäß Interface
     const [morphBox] = await db
       .select()
       .from(morphBoxes)
@@ -291,16 +304,16 @@ export class DatabaseStorage implements IStorage {
     return morphBox;
   }
 
-  async getMorphBoxesByUserId(userId: string): Promise<MorphBox[]> { // userId is string (UUID)
+  async getMorphBoxesByUserId(userId: string): Promise<MorphBox[]> { // userId ist string (UUID)
     return db
       .select()
       .from(morphBoxes)
-      .where(eq(morphBoxes.userId, userId)) // Compare UUID string with string
+      .where(eq(morphBoxes.userId, userId)) // Vergleiche UUID string mit string
       .orderBy(desc(morphBoxes.updatedAt));
   }
 
   async getMorphBoxWithParameters(
-    id: number, // ID is serial (number)
+    id: string, // ID ist jetzt string gemäß Interface
   ): Promise<MorphBoxWithParameters | undefined> {
     const [morphBox] = await db
       .select()
@@ -312,14 +325,14 @@ export class DatabaseStorage implements IStorage {
     const params = await db
       .select()
       .from(parameters)
-      .where(eq(parameters.userId, morphBox.userId)); // morphBox.userId is string
+      .where(eq(parameters.userId, morphBox.userId)); // morphBox.userId ist string
     const parametersWithAttributes: ParameterWithAttributes[] = [];
 
     for (const param of params) {
       const attrs = await db
         .select()
         .from(attributes)
-        .where(eq(attributes.parameterId, param.id)); // param.id is number
+        .where(eq(attributes.parameterId, param.id)); // param.id ist string
       parametersWithAttributes.push({
         ...param,
         attributes: attrs,
@@ -332,7 +345,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async deleteMorphBox(id: number): Promise<boolean> { // ID is serial (number)
+  async deleteMorphBox(id: string): Promise<boolean> { // ID ist jetzt string gemäß Interface
     // Delete associated shared access entries first due to potential FK constraints
     await db.delete(sharedAccess).where(eq(sharedAccess.morphBoxId, id));
 
@@ -361,7 +374,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSharedAccess(
-    id: number, // ID is serial (number)
+    id: string, // ID ist jetzt string gemäß Interface
     sharedAccessData: Partial<SharedAccess>,
   ): Promise<SharedAccess | undefined> {
     const [access] = await db
@@ -372,7 +385,7 @@ export class DatabaseStorage implements IStorage {
     return access;
   }
 
-  async getSharedAccessById(id: number): Promise<SharedAccess | undefined> { // Implemented method, ID is serial (number)
+  async getSharedAccessById(id: string): Promise<SharedAccess | undefined> { // ID ist jetzt string gemäß Interface
     const [access] = await db
       .select()
       .from(sharedAccess)
@@ -380,31 +393,30 @@ export class DatabaseStorage implements IStorage {
     return access;
   }
 
-
   async getSharedAccessByUserAndBox(
-    userId: string, // userId is string (UUID)
-    morphBoxId: number, // morphBoxId is number (serial)
+    userId: string, // userId ist string (UUID)
+    morphBoxId: string, // morphBoxId ist jetzt string gemäß Interface
   ): Promise<SharedAccess | undefined> {
     const [access] = await db
       .select()
       .from(sharedAccess)
       .where(
         and(
-          eq(sharedAccess.userId, userId), // Compare UUID string with string
-          eq(sharedAccess.morphBoxId, morphBoxId), // Compare number with number
+          eq(sharedAccess.userId, userId), // Vergleiche UUID string mit string
+          eq(sharedAccess.morphBoxId, morphBoxId), // Vergleiche string
         ),
       );
     return access;
   }
 
-  async getSharedAccessesByUserId(userId: string): Promise<SharedAccess[]> { // userId is string (UUID)
+  async getSharedAccessesByUserId(userId: string): Promise<SharedAccess[]> { // userId ist string (UUID)
     return db
       .select()
       .from(sharedAccess)
-      .where(eq(sharedAccess.userId, userId)); // Compare UUID string with string
+      .where(eq(sharedAccess.userId, userId)); // Vergleiche UUID string mit string
   }
 
-  async getMorphBoxesSharedWithUser(userId: string): Promise<MorphBox[]> { // userId is string (UUID)
+  async getMorphBoxesSharedWithUser(userId: string): Promise<MorphBox[]> { // userId ist string (UUID)
     const boxes = await db
       .select({
         box: morphBoxes,
@@ -413,8 +425,8 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(
         sharedAccess,
         and(
-          eq(sharedAccess.morphBoxId, morphBoxes.id), // Compare number with number
-          eq(sharedAccess.userId, userId), // Compare UUID string with string
+          eq(sharedAccess.morphBoxId, morphBoxes.id), // Vergleiche string mit string
+          eq(sharedAccess.userId, userId), // Vergleiche UUID string mit string
         ),
       )
       .orderBy(desc(morphBoxes.updatedAt));
@@ -422,7 +434,7 @@ export class DatabaseStorage implements IStorage {
     return boxes.map((item) => item.box);
   }
 
-  async deleteSharedAccess(id: number): Promise<boolean> { // ID is serial (number)
+  async deleteSharedAccess(id: string): Promise<boolean> { // ID ist jetzt string gemäß Interface
     const result = await db.delete(sharedAccess).where(eq(sharedAccess.id, id));
     return (result.rowCount ?? 0) > 0;
   }
